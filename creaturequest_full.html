@@ -1,0 +1,2911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creature Quest ∞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+/* ===== Creature Quest ∞ — styles ===== */
+:root{
+  --bg:#0e1122; --panel:#161a30; --panel2:#1e2342; --ink:#eef1ff; --muted:#9aa3c7;
+  --accent:#ffcc4d; --accent2:#6be3ff; --good:#5fe07a; --bad:#ff5d6c; --border:#323a66;
+  --sky:#9fd4ff; --ground:#6dbb5a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+.hidden{display:none!important}
+.pixel{font-family:'Press Start 2P',ui-monospace,monospace;letter-spacing:1px}
+.muted{color:var(--muted)}
+.good{color:var(--good)}
+.bad{color:var(--bad)}
+kbd{display:inline-block;font-family:ui-monospace,monospace;font-size:11px;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);margin-left:4px;vertical-align:1px}
+button{font-family:inherit}
+
+#world{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+
+/* ---------- buttons ---------- */
+.btn{cursor:pointer;border:none;border-radius:10px;padding:9px 16px;font-weight:800;font-size:15px;background:var(--accent);color:#2a1d00;box-shadow:0 4px 0 #b88a12;transition:transform .08s,filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b88a12}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+.btn.alt{background:var(--accent2);color:#002b38;box-shadow:0 4px 0 #2a9ab5}
+.btn.ghost{background:var(--panel2);color:var(--ink);box-shadow:0 4px 0 #0a0d1c}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px;box-shadow:0 3px 0 #b88a12}
+.btn.ghost.sm{box-shadow:0 3px 0 #0a0d1c}
+.btn.big{padding:14px 30px;font-size:20px}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:5}
+.hud-box{pointer-events:auto;background:rgba(14,17,34,.82);border:2px solid var(--border);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.55;backdrop-filter:blur(4px);max-width:380px}
+.hrow{display:flex;gap:12px;flex-wrap:wrap}
+.hud-btns{pointer-events:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.hud-btns button{cursor:pointer;background:rgba(14,17,34,.85);color:var(--ink);border:2px solid var(--border);border-radius:10px;padding:7px 10px;font-weight:800;font-size:14px}
+.hud-btns button:hover{border-color:var(--accent)}
+#teamBar{position:fixed;left:10px;bottom:10px;display:flex;gap:6px;z-index:5}
+.tslot{width:62px;background:rgba(14,17,34,.85);border:2px solid var(--border);border-radius:10px;padding:4px;cursor:pointer;text-align:center}
+.tslot canvas{width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto}
+.tslot small{display:block;font-size:11px;font-weight:800}
+.tslot.dead canvas{filter:grayscale(1) brightness(.6)}
+#hint{position:fixed;right:10px;bottom:10px;z-index:5;background:rgba(14,17,34,.8);border:2px solid var(--border);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--muted)}
+#toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-80px);background:#fff;color:#1c2140;font-weight:800;padding:10px 18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:transform .25s;z-index:60;pointer-events:none;max-width:80vw;text-align:center}
+#toast.show{transform:translate(-50%,0)}
+
+/* ---------- overlays & panels ---------- */
+.overlay{position:fixed;inset:0;background:rgba(5,7,18,.72);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px}
+.panel{background:var(--panel);border:3px solid var(--border);border-radius:18px;width:min(980px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:2px solid var(--border)}
+.panel-head h2{margin:0;font-size:22px}
+#panelClose{cursor:pointer;background:var(--panel2);color:var(--ink);border:2px solid var(--border);border-radius:10px;width:38px;height:38px;font-size:18px;font-weight:900}
+.panel-body{padding:16px 18px;overflow:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.ccard{display:flex;gap:10px;background:var(--panel2);border:2px solid var(--border);border-radius:14px;padding:10px;align-items:center}
+.ccard canvas{image-rendering:pixelated;background:rgba(255,255,255,.04);border-radius:10px;flex:none}
+.cc-main{flex:1;min-width:0}
+.cc-name{font-weight:900;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv{color:var(--accent);font-size:13px}
+.cc-tags{margin:3px 0;display:flex;gap:4px;flex-wrap:wrap}
+.cc-hp{font-size:12px;color:var(--muted);margin-top:2px}
+.cc-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.tbadge{display:inline-block;font-size:11px;font-weight:900;color:#10131f;padding:2px 7px;border-radius:999px;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.rbadge{display:inline-block;font-size:11px;font-weight:900;padding:2px 7px;border-radius:999px;border:2px solid currentColor}
+.r0 .rbadge,.rbadge.r0{color:#cfd8dc}
+.rbadge.r1{color:#7ee081}.rbadge.r2{color:#5fb0ff}.rbadge.r3{color:#c77dff}.rbadge.r4{color:#ffb627}
+.ccard.r3,.mini.r3{border-color:#7a4fb8}
+.ccard.r4,.mini.r4{border-color:#ffb627;box-shadow:0 0 14px rgba(255,182,39,.35)}
+.sbadge{display:inline-block;font-size:11px;font-weight:900;color:#10131f;padding:2px 6px;border-radius:6px}
+.hpbar{height:10px;background:#2b3157;border-radius:6px;overflow:hidden;border:2px solid #1b1f3a}
+.hpbar.sm{height:8px}
+.hpfill{height:100%;background:#4ee06c;transition:width .45s ease}
+.hpfill.yellow{background:#f5c518}.hpfill.red{background:#ff4d5e}
+.xpbar{height:5px;background:#c9cde6;border-radius:4px;overflow:hidden;margin-top:4px}
+.xpbar div{height:100%;background:#3d9dff;transition:width .5s}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.mini{cursor:pointer;background:var(--panel2);border:2px solid var(--border);border-radius:12px;padding:6px;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px}
+.mini:hover{border-color:var(--accent)}
+.mini canvas{image-rendering:pixelated}
+.mini span{font-weight:800;font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini small{color:var(--muted);font-size:11px}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.items{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;background:var(--panel2);border:2px solid var(--border);border-radius:12px;padding:8px 12px}
+.item>div{flex:1}
+.ii{font-size:26px;width:36px;text-align:center}
+.cnt{color:var(--accent);font-weight:900}
+.detail{display:grid;grid-template-columns:220px 1fr;gap:18px}
+.detail .bigspr{image-rendering:pixelated;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);border-radius:16px;width:200px;height:200px}
+.detail h3{margin:4px 0;font-size:24px}
+.stat{display:grid;grid-template-columns:70px 1fr 50px;align-items:center;gap:8px;font-size:14px;margin:3px 0}
+.sbar{height:8px;background:#2b3157;border-radius:5px;overflow:hidden}
+.sbar div{height:100%;background:linear-gradient(90deg,#6be3ff,#ffcc4d)}
+.moves{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.move{background:var(--panel2);border-left:6px solid #888;border-radius:8px;padding:6px 10px;font-size:13px}
+.move b{font-size:14px}
+.learn{width:100%;border-collapse:collapse;font-size:13px}
+.learn td{padding:3px 6px;border-bottom:1px solid var(--border)}
+.learn tr.known td{color:var(--good)}
+.learn tr.future td{color:var(--muted)}
+.evoline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.evoline .evo{text-align:center;font-size:12px;font-weight:800}
+.evoline canvas{image-rendering:pixelated;display:block;margin:0 auto}
+.evoline .arrow{color:var(--muted);font-size:12px;text-align:center}
+.dexhead{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--panel2);border-radius:14px;padding:12px 16px;margin-bottom:12px}
+.dexhead .big{font-size:30px;font-weight:900;color:var(--accent)}
+.dexctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.dexctl input{background:#0e1122;color:var(--ink);border:2px solid var(--border);border-radius:10px;padding:8px 10px;font-size:15px;width:220px}
+.tabs{display:flex;gap:6px}
+.tabs .btn.on{outline:3px solid #fff}
+.tchart{border-collapse:collapse;font-size:12px;margin-top:8px}
+.tchart th,.tchart td{border:1px solid var(--border);padding:3px 5px;text-align:center}
+.tchart td.s{background:#2f7a3c;font-weight:900}
+.tchart td.w{background:#7a2f37}
+.howto{background:rgba(22,26,48,.92);border:2px solid var(--border);border-radius:14px;padding:12px 18px;text-align:left;max-width:760px;margin:0 auto;line-height:1.5;font-size:15px}
+.howto summary{cursor:pointer;font-weight:900;font-size:18px;color:var(--accent)}
+.howto h4{margin:10px 0 4px;color:var(--accent2)}
+.howto ul{margin:4px 0;padding-left:20px}
+
+/* ---------- title & starter ---------- */
+.title{background:radial-gradient(ellipse at center,rgba(14,17,34,.55),rgba(5,7,18,.92));overflow:auto;align-items:flex-start}
+.title-inner{text-align:center;max-width:900px;margin:auto;padding:20px 0}
+.title h1{font-size:clamp(26px,5vw,52px);margin:10px 0 6px;color:var(--accent);text-shadow:4px 4px 0 #8a5a00,8px 8px 0 rgba(0,0,0,.4)}
+.subtitle{color:var(--accent2);font-size:16px;margin-bottom:10px;text-shadow:3px 3px 0 #003b4d}
+.tagline{font-size:18px;margin:6px 0 14px}
+.parade{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:10px 0 18px;min-height:130px}
+.parade .p{background:rgba(30,35,66,.8);border:2px solid var(--border);border-radius:14px;padding:6px;width:108px;animation:pop .4s ease}
+.parade canvas{image-rendering:pixelated;display:block;margin:0 auto}
+.parade span{display:block;font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.parade small{display:block;font-size:10px;color:var(--muted)}
+.title-btns{display:flex;gap:14px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.starter-box{background:var(--panel);border:3px solid var(--border);border-radius:18px;padding:20px;max-width:960px;width:100%;text-align:center;max-height:calc(100vh - 32px);overflow:auto}
+.starter-box h2{margin:4px 0 4px;font-size:26px}
+.starters{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0}
+.starter{background:var(--panel2);border:3px solid var(--border);border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.starter:hover{border-color:var(--accent)}
+.starter canvas{image-rendering:pixelated;width:160px;height:160px}
+.starter h3{margin:0;font-size:22px}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ---------- battle ---------- */
+#battle{position:fixed;inset:0;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--sky) 0%,var(--sky) 45%,var(--ground) 45.2%,var(--ground) 100%);z-index:20;animation:bintro .6s ease}
+@keyframes bintro{0%{clip-path:circle(0% at 50% 50%)}100%{clip-path:circle(120% at 50% 50%)}}
+.b-field{flex:1;position:relative;min-height:0}
+.b-foe{position:absolute;right:6%;top:4%;display:flex;align-items:flex-start;gap:16px;flex-direction:row-reverse}
+.b-me{position:absolute;left:6%;bottom:2%;display:flex;align-items:flex-end;gap:16px}
+.b-foe .b-info{margin-top:20px}
+.b-stage{position:relative;width:230px;height:220px;display:flex;align-items:flex-end;justify-content:center}
+.b-plat{position:absolute;bottom:2px;left:6px;right:6px;height:50px;border-radius:50%;background:rgba(0,0,0,.18);box-shadow:inset 0 -8px 0 rgba(0,0,0,.12)}
+.b-spr{position:relative;width:192px;height:192px;margin-bottom:14px}
+.b-spr canvas{width:192px;height:192px;image-rendering:pixelated;animation:idle 2.6s ease-in-out infinite;display:block}
+.b-stage[data-rar="3"] canvas{filter:drop-shadow(0 0 10px #c77dff)}
+.b-stage[data-rar="4"] canvas{filter:drop-shadow(0 0 14px #ffb627) drop-shadow(0 0 4px #fff3a8)}
+.b-fx{position:absolute;inset:10px;border-radius:50%;pointer-events:none;opacity:0}
+.b-fx.go{animation:fxburst .5s ease-out}
+.b-orb{position:absolute;left:50%;bottom:40px;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:linear-gradient(180deg,#ff4d5e 0 46%,#20243f 46% 54%,#fff 54%);border:3px solid #20243f;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+.b-orb::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;background:#fff;border:3px solid #20243f}
+.b-orb.great{background:linear-gradient(180deg,#3d9dff 0 46%,#20243f 46% 54%,#fff 54%)}
+.b-orb.ultra{background:linear-gradient(180deg,#ffcc4d 0 46%,#20243f 46% 54%,#2a2a2a 54%)}
+.b-orb.prism{background:linear-gradient(180deg,#c77dff,#6be3ff 46%,#20243f 46% 54%,#fff 54%)}
+.b-orb.throw{animation:throw .55s ease-out}
+.b-orb.wobble{animation:wobble .6s ease-in-out}
+.b-orb.caught{animation:caughtGlow 1s ease}
+.b-spr.sucked canvas{transition:transform .35s,opacity .35s;transform:scale(.05) translateY(400px);opacity:0}
+.b-info{background:rgba(255,255,255,.94);color:#1c2140;border-radius:14px;padding:10px 14px;min-width:270px;max-width:320px;box-shadow:0 6px 0 rgba(0,0,0,.2);border:3px solid #2a3060}
+.bi-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.bi-name{font-weight:900;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-lv{font-weight:900;color:#a8540b}
+.bi-tags{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0 6px}
+.b-info .rbadge.r0{color:#7c8794}
+.b-info .rbadge.r1{color:#2e9b36}
+.b-info .rbadge.r2{color:#1f6fd1}
+.b-info .rbadge.r3{color:#8a3fd1}
+.b-info .rbadge.r4{color:#d48a00}
+.bi-hp{text-align:right;font-weight:900;font-size:14px;margin-top:3px}
+.caught-mark{font-weight:900;color:#d23b4a}
+.b-bottom{display:flex;gap:12px;padding:12px;background:#14182c;border-top:4px solid #2a3060;min-height:178px}
+.b-msg{flex:1.15;background:#fff;color:#1c2140;border-radius:12px;padding:16px 20px;font-size:20px;font-weight:800;border:3px solid #2a3060;cursor:pointer;line-height:1.35}
+.b-actions{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+.bbtn{cursor:pointer;background:var(--panel2);color:var(--ink);border:2px solid var(--border);border-left-width:8px;border-radius:10px;padding:10px 12px;font-size:16px;font-weight:900;text-align:left;line-height:1.2}
+.bbtn:hover:not(:disabled){border-color:var(--accent)}
+.bbtn:disabled{opacity:.35;cursor:not-allowed}
+.bbtn small{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-top:2px}
+.bbtn.back{border-left-color:#666}
+@keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes appear{0%{transform:scale(.1);opacity:0}70%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+@keyframes lungeR{0%,100%{transform:translate(0,0)}40%{transform:translate(60px,-30px)}}
+@keyframes lungeL{0%,100%{transform:translate(0,0)}40%{transform:translate(-60px,30px)}}
+@keyframes hit{0%,100%{transform:translateX(0);opacity:1}15%{transform:translateX(-12px);opacity:.3}30%{transform:translateX(12px);opacity:1}45%{transform:translateX(-8px);opacity:.3}60%{transform:translateX(8px);opacity:1}}
+@keyframes faint{to{transform:translateY(80px);opacity:0}}
+@keyframes fxburst{0%{opacity:.95;transform:scale(.3)}100%{opacity:0;transform:scale(1.4)}}
+@keyframes throw{0%{transform:translate(-420px,260px) rotate(-360deg)}100%{transform:translate(0,0) rotate(0)}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}75%{transform:rotate(28deg)}}
+@keyframes caughtGlow{0%{box-shadow:0 0 0 rgba(255,230,120,0)}50%{box-shadow:0 0 40px 16px rgba(255,230,120,.9)}100%{box-shadow:0 0 0 rgba(255,230,120,0)}}
+.b-spr.appear{animation:appear .5s ease}
+.b-spr.lungeR{animation:lungeR .35s ease}
+.b-spr.lungeL{animation:lungeL .35s ease}
+.b-spr.hit{animation:hit .5s ease}
+.b-spr.faint{animation:faint .6s ease forwards}
+
+/* ---------- evolution ---------- */
+.evo-box{background:var(--panel);border:3px solid var(--border);border-radius:20px;padding:20px 24px;text-align:center;max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow:auto}
+.evo-box canvas{image-rendering:pixelated;width:192px;height:192px;background:radial-gradient(circle,rgba(255,240,180,.25),transparent 70%)}
+.evo-box p{font-size:20px;font-weight:800;margin:8px 0}
+
+/* ---------- type matchup box ---------- */
+.b-types{position:absolute;left:1.5%;top:2%;width:min(370px,46vw);max-height:calc(100% - 200px);min-height:0;overflow:auto;background:rgba(14,17,34,.9);color:var(--ink);border:2px solid var(--border);border-radius:14px;padding:9px 12px;font-size:13px;z-index:3;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.b-types.closed{width:auto;overflow:visible}
+.b-types.closed .bt-body{display:none}
+.bt-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:900;font-size:15px}
+.bt-head button{cursor:pointer;background:var(--panel2);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:3px 7px;font-weight:800;font-size:12px;margin-left:4px}
+.bt-head button:hover{border-color:var(--accent)}
+.bt-sec{margin-top:5px}
+.bt-lbl{color:var(--muted);font-weight:800;font-size:12px;margin-bottom:2px}
+.tchip{display:inline-block;font-size:11px;font-weight:900;color:#10131f;padding:1px 7px;border-radius:999px;margin:0 3px 2px 0;white-space:nowrap}
+.bt-moves{list-style:none;margin:0;padding:0}
+.bt-moves li{display:flex;justify-content:space-between;gap:8px;padding:2px 7px;border-radius:7px;margin-bottom:2px;background:rgba(255,255,255,.06)}
+.bt-moves li.up{background:rgba(95,224,122,.22)}
+.bt-moves li.down{background:rgba(255,93,108,.18)}
+.bt-moves i{font-style:normal;font-size:10px;color:var(--accent)}
+.bt-warn{padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.06);line-height:1.5}
+.bt-warn.bad-bg{background:rgba(255,93,108,.2)}
+.bt-warn.good-bg{background:rgba(95,224,122,.18)}
+.tchart th.hl,.tchart td.hl{outline:2px solid var(--accent);outline-offset:-2px}
+.tchart th small{font-size:9px;color:var(--muted)}
+
+/* ---------- switch menu ---------- */
+.b-msg{overflow:auto}
+.bbtn.sw{position:relative;padding:6px 8px 7px;border-left-width:4px}
+.bbtn.sw kbd{position:absolute;right:6px;top:6px}
+.bbtn.dis{opacity:.45;cursor:not-allowed}
+.bbtn.sw.cur{border-color:var(--accent2);opacity:.7}
+.sw-row{display:flex;gap:8px;align-items:center}
+.sw-row canvas{width:40px;height:40px;image-rendering:pixelated;flex:none;background:rgba(255,255,255,.06);border-radius:8px}
+.sw-main{flex:1;min-width:0;display:block}
+.sw-name{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:26px}
+.sw-lv{color:var(--accent);font-size:12px}
+.sw-sub{display:block;font-size:11px;color:var(--muted);font-weight:700;margin:1px 0 3px}
+.sw-tag{color:var(--accent2)}
+.bbtn .hpbar,.bbtn .hpfill{display:block}
+.bbtn .hpbar{height:7px;border-width:1px}
+.sw-prev{display:flex;gap:14px;font-size:13px;font-weight:700;line-height:1.35;cursor:default}
+.swp-left{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+.swp-left canvas{width:96px;height:96px;image-rendering:pixelated;background:radial-gradient(circle,rgba(40,48,100,.12),transparent 70%);border-radius:12px}
+.swv{font-size:12px;font-weight:900;padding:3px 8px;border-radius:999px;background:#e6e8f2;white-space:nowrap}
+.swv.good-bg{background:#c9f2d2;color:#145c26}
+.swv.bad-bg{background:#ffd3d8;color:#8a1626}
+.swp-main{flex:1;min-width:0}
+.swp-title{font-size:12px;color:#6a7196;font-weight:800;margin-bottom:2px}
+.swp-name{font-size:17px;font-weight:900;margin-bottom:5px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.swp-name .sw-lv{color:#a8540b}
+.swp-hp{font-size:12px;text-align:right;margin:2px 0 4px}
+.swp-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swp-stat{display:grid;grid-template-columns:58px 1fr 34px;gap:6px;align-items:center;font-size:12px;margin:2px 0}
+.swp-stat .sbar{display:block;height:7px;background:#dfe2ef}
+.swp-stat .sbar span{display:block;height:100%;background:linear-gradient(90deg,#3d9dff,#ffb627)}
+.swp-stat b{text-align:right}
+.swp-lbl{font-size:12px;color:#6a7196;font-weight:800;margin-bottom:2px}
+.swp-line{font-size:12px;margin-top:4px}
+.bad-txt{color:#b3172b}.good-txt{color:#18803a}
+.sw-prev .bt-moves li{background:#eef0f7;font-size:12px}
+.sw-prev .bt-moves li.up{background:#c9f2d2}
+.sw-prev .bt-moves li.down{background:#ffd3d8}
+.sw-prev .muted{color:#7b82a6}
+.sw-prev .rbadge.r0{color:#7c8794}.sw-prev .rbadge.r1{color:#2e9b36}.sw-prev .rbadge.r2{color:#1f6fd1}.sw-prev .rbadge.r3{color:#8a3fd1}.sw-prev .rbadge.r4{color:#d48a00}
+
+/* ---------- forms, traits, attacks ---------- */
+.fbadge{display:inline-block;font-size:11px;font-weight:900;padding:2px 7px;border-radius:6px;background:#3a4278;color:#fff}
+.fbadge.f1{background:#2f7a8c}.fbadge.f2{background:#7a4fb8}.fbadge.f3{background:linear-gradient(90deg,#ff8a3d,#ffcc4d);color:#3a2000}
+.trait{display:inline-block;font-size:12px;font-weight:900;padding:2px 8px;border-radius:999px;background:rgba(255,204,77,.18);color:var(--accent);border:1px solid rgba(255,204,77,.5);white-space:nowrap}
+.trait.sm{font-size:11px;padding:1px 6px}
+.b-info .trait{background:#fff4d6;color:#8a5a00;border-color:#e8c060}
+.trait-line{margin:4px 0 6px;font-size:13px}
+.stars{color:#ffcc4d;font-size:12px;letter-spacing:-1px;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.atk-list{display:flex;flex-direction:column;gap:6px;margin:6px 0 4px}
+.atk{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px solid var(--border);border-left-width:7px;border-radius:10px;padding:6px 10px;font-size:13px}
+.atk.eq{border-color:var(--good);border-left-color:inherit;background:rgba(95,224,122,.1)}
+.atk.locked{opacity:.55}
+.atk.picking{outline:2px dashed var(--accent)}
+.atk-info{flex:1;min-width:0}
+.atk-info b{font-size:14px}
+.atk-btn{flex:none;text-align:right}
+.eqd{color:var(--good);font-weight:900}
+.lock{color:var(--muted);font-weight:800;font-size:12px}
+.st-evo{display:flex;align-items:center;justify-content:center;gap:4px;color:var(--muted)}
+.st-evo canvas{width:40px;height:40px;image-rendering:pixelated}
+.swp-trait{float:left;color:#8a5a00;font-weight:800}
+.evo-stats{margin:6px auto;border-collapse:collapse;font-size:15px}
+.evo-stats td{padding:2px 8px;text-align:right}
+.evo-stats td:first-child{text-align:left;color:var(--muted)}
+.evo-list{list-style:none;padding:0;margin:8px 0;text-align:left;font-size:14px;line-height:1.7}
+.evo-new{background:var(--panel2);border:2px solid var(--accent);border-radius:12px;padding:10px;margin:8px 0;text-align:left;font-size:14px}
+.evo-q{margin:8px 0 6px;font-weight:800}
+.evo-swap{display:flex;gap:6px;flex-wrap:wrap}
+.b-stage[data-form="3"] canvas{filter:drop-shadow(0 0 8px rgba(255,214,90,.9))}
+
+.box-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.mini{position:relative}
+.dupe{position:absolute;top:4px;right:5px;font-style:normal;font-size:11px;font-weight:900;background:var(--accent);color:#2a1d00;border-radius:999px;padding:0 6px}
+.sell-box{background:var(--panel2);border:2px solid var(--accent);border-radius:14px;padding:12px 16px;margin-bottom:12px}
+.sell-box p{margin:4px 0 8px}
+.sell-btns{display:flex;gap:10px;flex-wrap:wrap}
+div.mini{cursor:default}
+
+/* ---------- cloud save ---------- */
+#cloudWrap{z-index:45}
+.cloud-panel{width:min(820px,100%)}
+.xbtn{cursor:pointer;background:var(--panel2);color:var(--ink);border:2px solid var(--border);border-radius:10px;width:38px;height:38px;font-size:18px;font-weight:900}
+.cloud-row{background:rgba(22,26,48,.9);border:2px solid var(--border);border-radius:12px;padding:8px 14px;margin:0 auto 16px;max-width:760px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.hud-btns .cloud-btn{border-color:#2a9ab5}
+.cloud-hud{color:var(--accent2)}
+.cmsg{background:rgba(95,224,122,.15);border:2px solid var(--good);border-radius:12px;padding:10px 14px;margin-bottom:10px}
+.cstat{border-radius:10px;padding:8px 12px;margin:8px 0;background:rgba(95,224,122,.15)}
+.csetup{background:var(--panel2);border:2px solid var(--border);border-radius:12px;padding:10px 14px;margin:10px 0}
+.csetup summary,.cpaste summary{cursor:pointer;font-weight:900;color:var(--accent)}
+.cstep{display:flex;gap:10px;margin:10px 0;line-height:1.5;font-size:14px}
+.cnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#2a1d00;font-weight:900;display:flex;align-items:center;justify-content:center}
+.cstep a{color:var(--accent2)}
+.cstep code,.cpaste code{background:#0e1122;padding:1px 5px;border-radius:5px}
+.ccode{position:relative;margin-top:6px}
+.ccode textarea,.cpaste textarea{width:100%;height:120px;background:#0b0e1d;color:#cfe3ff;border:2px solid var(--border);border-radius:10px;font:12px/1.4 ui-monospace,monospace;padding:8px;resize:vertical}
+.ccode button{position:absolute;top:8px;right:14px}
+.crow{display:flex;gap:8px;margin:10px 0}
+.crow input{flex:1;min-width:0;background:#0e1122;color:var(--ink);border:2px solid var(--border);border-radius:10px;padding:9px 12px;font-size:14px}
+.cbtns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.cpaste{margin-top:10px}
+.cpaste textarea{height:80px;margin:6px 0}
+
+/* ---------- world map ---------- */
+.map-wrap{display:flex;gap:16px;align-items:flex-start}
+.map-box{position:relative;flex:none;width:min(560px,calc(100vh - 150px),62vw);aspect-ratio:1;border:3px solid var(--border);border-radius:10px;overflow:hidden;background:#0b0e1d}
+.map-box canvas{width:100%;height:100%;display:block;image-rendering:pixelated;cursor:crosshair}
+.map-prog{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;background:rgba(11,14,29,.75)}
+.map-me{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#ff3b4e;border:3px solid #fff;box-shadow:0 0 0 2px #0b0e1d;pointer-events:none;animation:mepulse 1.2s ease-in-out infinite}
+@keyframes mepulse{50%{transform:scale(1.5);box-shadow:0 0 0 2px #0b0e1d,0 0 12px 4px rgba(255,59,78,.7)}}
+.map-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.map-sec{font-size:22px;font-weight:900;color:var(--accent)}
+.map-you{background:var(--panel2);border-radius:10px;padding:8px 10px}
+.map-hover{background:#0b0e1d;border:2px solid var(--border);border-radius:10px;padding:8px 10px;min-height:52px;font-size:13px}
+.map-legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px}
+.mleg{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.mleg i{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid rgba(255,255,255,.35)}
+.mleg i.mk-me{border-radius:50%;background:#ff3b4e;border:2px solid #fff}
+.mleg i.mk-sh{background:#5ee6ff;transform:rotate(45deg) scale(.8);border-color:#0b0e1d}
+.mleg i.mk-sh.home{background:#ffcc4d}
+.mleg i.mk-tr{background:#ff8a3d;width:8px;height:8px}
+.mleg i.mk-tr.done{background:#8b8fa8}
+.mk-st{color:#fff36b}
+@media (max-width:820px){.map-wrap{flex-direction:column}.map-box{width:100%}}
+
+@media (max-height:700px){
+  .b-types{font-size:12px;padding:7px 10px}
+  .bt-lbl{font-size:11px}
+}
+@media (max-width:820px){
+  .b-bottom{flex-direction:column}
+  .b-stage{transform:scale(.75)}
+  .detail{grid-template-columns:1fr}
+  .moves{grid-template-columns:1fr}
+  .hud-box{font-size:12px;max-width:60vw}
+}
+
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div class="hud-box" id="hudStats"></div>
+  <div class="hud-btns">
+    <button data-open="team">🐾 Team <kbd>T</kbd></button>
+    <button data-open="dex">📖 Dex <kbd>P</kbd></button>
+    <button data-open="box">📦 Box <kbd>B</kbd></button>
+    <button data-open="bag">🎒 Bag <kbd>I</kbd></button>
+    <button data-open="help">❓ Help <kbd>H</kbd></button>
+    <button data-open="map">🗺️ Map <kbd>M</kbd></button>
+    <button data-open="cloud" class="cloud-btn">☁️ Save <kbd>K</kbd></button>
+  </div>
+</div>
+<div id="teamBar" class="hidden"></div>
+<div id="hint" class="hidden">Move: <kbd>WASD</kbd>/<kbd>Arrows</kbd> · Run: <kbd>Shift</kbd> · Walk in tall grass to find creatures</div>
+<div id="toast"></div>
+
+<!-- Panels -->
+<div id="panelWrap" class="overlay hidden">
+  <div class="panel">
+    <div class="panel-head"><h2 id="panelTitle"></h2><button id="panelClose" title="Close (Esc)">✕</button></div>
+    <div id="panelBody" class="panel-body"></div>
+  </div>
+</div>
+
+<!-- Battle -->
+<div id="battle" class="hidden">
+  <div class="b-field">
+    <div class="b-types" id="bTypes"></div>
+    <div class="b-foe">
+      <div class="b-stage"><div class="b-plat"></div><div class="b-spr" id="foeSpr"><canvas id="foeCv" width="192" height="192"></canvas><div class="b-fx" id="foeFx"></div></div><div class="b-orb hidden" id="orbEl"></div></div>
+      <div class="b-info" id="foeInfo"></div>
+    </div>
+    <div class="b-me">
+      <div class="b-stage"><div class="b-plat"></div><div class="b-spr" id="meSpr"><canvas id="meCv" width="192" height="192"></canvas><div class="b-fx" id="meFx"></div></div></div>
+      <div class="b-info" id="meInfo"></div>
+    </div>
+  </div>
+  <div class="b-bottom">
+    <div id="bMsg" class="b-msg" title="Click or press Space to continue"></div>
+    <div id="bActions" class="b-actions"></div>
+  </div>
+</div>
+
+<!-- Evolution -->
+<div id="evo" class="overlay hidden">
+  <div class="evo-box"><canvas id="evoCv" width="224" height="224"></canvas><p id="evoMsg"></p><div id="evoDet"></div><button id="evoBtn" class="btn big hidden">Awesome!</button></div>
+</div>
+
+<!-- Starter -->
+<div id="starter" class="overlay hidden">
+  <div class="starter-box">
+    <h2>Choose your first partner!</h2>
+    <p class="muted">These three were picked at random from over 3 million families — each one evolves 3 times. Don't like them? Reroll as many times as you want.</p>
+    <div id="starterList" class="starters"></div>
+    <button id="rerollBtn" class="btn alt">🎲 Reroll partners</button>
+  </div>
+</div>
+
+<!-- Title -->
+<div id="title" class="overlay title">
+  <div class="title-inner">
+    <h1 class="pixel">CREATURE QUEST</h1>
+    <div class="subtitle pixel">∞ INFINITE WORLD ∞</div>
+    <p class="tagline">Explore a world that never ends. Discover <b id="totalSpecies">12,582,912</b> different creatures.</p>
+    <div id="parade" class="parade"></div>
+    <div class="title-btns">
+      <button id="btnContinue" class="btn big">▶ Continue</button>
+      <button id="btnNew" class="btn big alt">✦ New Game</button>
+    </div>
+    <div id="cloudRow" class="cloud-row"></div>
+    <details id="howto" class="howto" open>
+      <summary>How to Play</summary>
+      <div id="howtoBody">
+        <h4>🎮 Controls</h4>
+        <ul>
+          <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Arrow keys</kbd> — walk around. Hold <kbd>Shift</kbd> to run.</li>
+          <li><kbd>T</kbd> Team · <kbd>P</kbd> Creaturedex · <kbd>B</kbd> Storage Box · <kbd>I</kbd> Bag · <kbd>M</kbd> Map · <kbd>K</kbd> Cloud save · <kbd>H</kbd> Help · <kbd>Esc</kbd> close a menu</li>
+          <li>In battle: click a button or press <kbd>1</kbd>–<kbd>9</kbd>. Click the message box or press <kbd>Space</kbd> to speed up text.</li>
+          <li>In battle, the <b>📊 Type Matchups</b> box shows which elements are super effective against the enemy, how well each of your moves will do, and whether the enemy's type is dangerous to you. Press <kbd>Y</kbd> to show/hide it and <kbd>C</kbd> for the full type chart.</li>
+          <li>When you <b>Switch</b>, point at a creature to see its stats, HP, speed compared to the foe, and how well its moves work against the foe — plus a quick tip like 👍 <i>Great pick!</i> or ⚠️ <i>Risky pick</i>.</li>
+        </ul>
+        <h4>🌍 The world</h4>
+        <ul>
+          <li>The world goes on forever in every direction — meadows, forests, deserts, tundra, swamps, volcanoes, coasts and highlands.</li>
+          <li>The world is split into <b>sections of 512 × 512 tiles</b>. Press <kbd>M</kbd> for a map of the section you're in — it shows biomes, shrines, trainers and you. Cross an edge and the map switches to the new section.</li>
+          <li>Wild creatures hide in <b>tall grass, forest brush, sand dunes, snowy brush, swamp reeds, volcanic ash, rocky rubble and shallow water</b>.</li>
+          <li>Each biome has its own creature types. A volcano has Flame and Stone creatures, the tundra has Frost and Wind, and so on.</li>
+          <li>The farther you travel from where you started, the <b>stronger</b> the wild creatures get. The HUD shows the wild level near you.</li>
+        </ul>
+        <h4>⚔️ Battling &amp; catching</h4>
+        <ul>
+          <li>Pick <b>Fight</b> to use a move. Moves that are strong against the enemy's type do double damage.</li>
+          <li>To catch a creature, weaken it first, then choose <b>Catch</b> and throw an orb. Lower HP, status effects (burn, poison, freeze, paralysis) and better orbs make catching easier.</li>
+          <li>Rarities: Common, Uncommon, Rare, <span style="color:#c77dff">Epic</span> and <span style="color:#ffb627">Legendary</span>. Rarer creatures are stronger but harder to catch. 1 in 300 is a ✨ Shiny with different colours!</li>
+          <li>Winning gives XP and coins. Creatures level up and <b>evolve 3 times</b> — every family has 4 forms: Form 1 → Form 2 → Form 3 → <b>MAX</b>.</li>
+          <li>Each evolution gives a <b>new name and look</b>, keeps its level, boosts every stat, fully heals it, makes all its attacks stronger (★), and gives it a special <b>trait</b> (like 🛡️ Thick Hide or 💚 Regenerate). Some creatures even gain a second type!</li>
+          <li>Every creature has <b>5 attacks</b> but can only <b>equip 3</b> at a time. It starts with 3 unlocked; the 4th unlocks at its 1st evolution and the 5th at its 2nd. Change equipped attacks in <b>Team → Info</b>.</li>
+          <li>Trainers stand around the world. Walk into one to battle them for big coin rewards. You can't run from a trainer, but if a battle is going badly you can press <b>💸 Pay Up</b> to hand over some coins and end it (no XP or prize, and you can challenge them again later).</li>
+        </ul>
+        <h4>📦 Storage Box</h4>
+        <ul><li>Catch the same creature more than once? The Box shows <b>×2</b>, <b>×3</b>… on copies. Press <b>💰 Sell all duplicates</b> to turn extra copies into coins. Your team, shinies and your best copy of each creature are always kept.</li></ul>
+        <h4>⛩️ Healing Shrines</h4>
+        <ul>
+          <li>Glowing blue crystals. Step on one to fully heal your team and set your respawn point. You can also buy orbs and potions there.</li>
+          <li>The HUD always points to the nearest shrine. If your whole team faints, you return to the last shrine you visited and lose half your coins.</li>
+        </ul>
+        <h4>💾 Saving</h4>
+        <ul><li>The game saves automatically in this browser.</li>
+          <li><b>☁️ Cloud save:</b> connect a Google Doc (the setup screen shows you how). Then press <b>☁️ Save</b> or <kbd>K</kbd> to put a save code in your doc. No Wi-Fi? The save is kept on this computer and uploaded automatically when Wi-Fi comes back. Load it on any computer with <b>⬇ Load from Doc</b>.</li></ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- Cloud save -->
+<div id="cloudWrap" class="overlay hidden">
+  <div class="panel cloud-panel">
+    <div class="panel-head"><h2>☁️ Cloud Save to Google Docs</h2><button id="cloudClose" class="xbtn" title="Close (Esc)">✕</button></div>
+    <div id="cloudBody" class="panel-body"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   CREATURE QUEST ∞ — an infinite creature-collecting adventure
+   Every creature, move, and tile is generated from math, so the
+   world never ends and there are 3,145,728 species to discover.
+   ========================================================= */
+
+// ---------------- utilities ----------------
+const $ = id => document.getElementById(id);
+function h32() {
+  let h = 0x811c9dc5 | 0;
+  for (let i = 0; i < arguments.length; i++) {
+    let k = arguments[i] | 0;
+    k = Math.imul(k, 0xcc9e2d51); k = (k << 15) | (k >>> 17); k = Math.imul(k, 0x1b873593);
+    h ^= k; h = (h << 13) | (h >>> 19); h = (Math.imul(h, 5) + 0xe6546b64) | 0;
+  }
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16;
+  return h >>> 0;
+}
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rnd = Math.random;
+function randInt(a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
+function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+function pickR(arr, r) { return arr[Math.floor((r || rnd)() * arr.length)]; }
+function fmt(n) { return Number(n).toLocaleString('en-US'); }
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function hsl(h, s, l) { return 'hsl(' + (((h % 360) + 360) % 360).toFixed(1) + ',' + clamp(s, 0, 100).toFixed(1) + '%,' + clamp(l, 0, 100).toFixed(1) + '%)'; }
+
+// ---------------- types ----------------
+const OLD_FAMS = 1048576, FAMILIES = OLD_FAMS * 3, STAGES = 4, TOTAL_SPECIES = FAMILIES * STAGES;
+const TYPES = ['Flame', 'Aqua', 'Leaf', 'Spark', 'Frost', 'Stone', 'Wind', 'Shadow', 'Light', 'Toxic'];
+const TYPE_COLOR = { Flame: '#ff7a45', Aqua: '#4aa3ff', Leaf: '#5fd06c', Spark: '#f7cf2a', Frost: '#8fe3f7', Stone: '#c49a63', Wind: '#8fdcc0', Shadow: '#9b74d6', Light: '#fff08a', Toxic: '#c96ee0', Normal: '#b8bdd0' };
+const TYPE_ICON = { Flame: '🔥', Aqua: '💧', Leaf: '🌿', Spark: '⚡', Frost: '❄️', Stone: '⛰️', Wind: '🌪️', Shadow: '🌑', Light: '✨', Toxic: '☠️', Normal: '⭐' };
+const TYPE_HUE = { Flame: 14, Aqua: 212, Leaf: 118, Spark: 48, Frost: 192, Stone: 32, Wind: 158, Shadow: 268, Light: 52, Toxic: 288 };
+const TYPE_TONE = { Light: [85, 66], Shadow: [40, 38], Stone: [32, 46], Frost: [62, 70], Wind: [42, 58], Spark: [88, 55] };
+const STRONG = { Flame: ['Leaf', 'Frost'], Aqua: ['Flame', 'Stone'], Leaf: ['Aqua', 'Stone'], Spark: ['Aqua', 'Wind'], Frost: ['Leaf', 'Wind'], Stone: ['Flame', 'Spark', 'Frost'], Wind: ['Leaf', 'Toxic'], Shadow: ['Light', 'Wind'], Light: ['Shadow', 'Toxic'], Toxic: ['Leaf', 'Aqua'] };
+const WEAK = { Flame: ['Aqua', 'Stone', 'Flame'], Aqua: ['Leaf', 'Aqua'], Leaf: ['Flame', 'Wind', 'Toxic', 'Leaf'], Spark: ['Stone', 'Leaf', 'Spark'], Frost: ['Flame', 'Frost', 'Stone'], Stone: ['Leaf', 'Aqua'], Wind: ['Stone', 'Spark'], Shadow: ['Shadow'], Light: ['Light', 'Flame'], Toxic: ['Stone', 'Toxic', 'Shadow'] };
+function typeMult(mt, defTypes) {
+  if (mt === 'Normal') return 1;
+  let m = 1;
+  for (const t of defTypes) { if (STRONG[mt].includes(t)) m *= 2; else if (WEAK[mt].includes(t)) m *= 0.5; }
+  return m;
+}
+const RARITY = [
+  { name: 'Common', cls: 'r0', mult: 1.00, catch: 1.00 },
+  { name: 'Uncommon', cls: 'r1', mult: 1.08, catch: 0.80 },
+  { name: 'Rare', cls: 'r2', mult: 1.17, catch: 0.55 },
+  { name: 'Epic', cls: 'r3', mult: 1.28, catch: 0.35 },
+  { name: 'Legendary', cls: 'r4', mult: 1.42, catch: 0.16 },
+];
+function familyRarity(fam) {
+  const r = h32(fam, 777) % 10000;
+  if (r < 50) return 4; if (r < 250) return 3; if (r < 1050) return 2; if (r < 3550) return 1; return 0;
+}
+const STATUS = {
+  burn: { name: 'BRN', color: '#ff8a50', txt: 'was burned!' },
+  psn: { name: 'PSN', color: '#c96ee0', txt: 'was poisoned!' },
+  frz: { name: 'FRZ', color: '#8fe3f7', txt: 'was frozen solid!' },
+  para: { name: 'PAR', color: '#f7cf2a', txt: 'is paralyzed! It may be unable to move!' },
+};
+const STATUS_BY_TYPE = { Flame: ['burn', 0.12], Toxic: ['psn', 0.25], Frost: ['frz', 0.10], Spark: ['para', 0.15] };
+const STATN = { atk: 'Attack', def: 'Defense', spd: 'Speed' };
+
+const ITEMS = {
+  orb: { name: 'Orb', icon: '🔴', price: 15, desc: 'A basic capture orb.', mult: 1 },
+  great: { name: 'Great Orb', icon: '🔵', price: 40, desc: 'Better catch rate (×1.7).', mult: 1.7 },
+  ultra: { name: 'Ultra Orb', icon: '🟡', price: 100, desc: 'High catch rate (×2.6).', mult: 2.6 },
+  prism: { name: 'Prism Orb', icon: '🔮', price: 400, desc: 'Amazing catch rate (×5). Save it for legendaries!', mult: 5 },
+  potion: { name: 'Potion', icon: '🧪', price: 20, desc: "Restores half of a creature's HP." },
+  superp: { name: 'Super Potion', icon: '⚗️', price: 60, desc: 'Fully restores HP and cures status.' },
+  revive: { name: 'Revive', icon: '💫', price: 80, desc: 'Revives a fainted creature with half HP.' },
+};
+const ORBS = ['orb', 'great', 'ultra', 'prism'], MEDS = ['potion', 'superp', 'revive'];
+
+// ---------------- names & moves ----------------
+const SYL_A = ['bra', 'zu', 'ki', 'mo', 'fla', 'gri', 'po', 'va', 'lu', 'dra', 'sne', 'qui', 'ta', 'ro', 'mi', 'cha', 'xe', 'be', 'fo', 'ny', 'gla', 'pe', 'sha', 'to', 'vi', 'wo', 'ze', 'ka', 'li', 'sto', 'bu', 'cri', 'do', 'ha', 'jo', 'nu', 'ple', 'ry', 'sa', 'tu', 'glo', 'pi', 'chi', 'mu', 'ra', 'spi', 'wy', 'yo'];
+const SYL_B = ['n', 'r', 'm', 'k', 'x', 'l', 's', 'th', 'sh', 'z', 'v', 'p', 'b', 'd', 'g', 'rk', 'll', 'mp', 'nd', 'st', 'ck', 'nt'];
+const END1 = ['let', 'ling', 'pip', 'bit', 'kin', 'y', 'o', 'ini', 'ub', 'ee', 'ot', 'ix', 'ette', 'pup'];
+const END2 = ['or', 'ax', 'on', 'ex', 'ar', 'ent', 'ow', 'ard', 'ade', 'um', 'ark', 'ite', 'aro'];
+const END3 = ['ogon', 'arch', 'oth', 'azor', 'eon', 'ion', 'itan', 'orus', 'yx', 'emoth', 'ador', 'alis', 'aurus', 'anox'];
+function nameParts(fam) {
+  const r = mulberry32(h32(fam, 3003));
+  let root = pickR(SYL_A, r);
+  if (r() < 0.55) root += pickR(SYL_A, r);
+  root += pickR(SYL_B, r);
+  return { root, e: [pickR(END1, r), pickR(END2, r), pickR(END3, r)] };
+}
+function capName(n) { n = n.replace(/(.)\1\1+/g, '$1$1'); return n.charAt(0).toUpperCase() + n.slice(1); }
+function makeName(fam, stage) { const p = nameParts(fam); return capName(p.root + p.e[stage]); }
+const EV_MID = ['a', 'o', 'i', 'u', 'e', 'ar', 'or', 'ir', 'ul', 'en', 'ax', 'ys', 'ra', 'zo', 'vi', 'ka'];
+const EV_END = [null,
+  ['ix', 'or', 'ax', 'eon', 'ark', 'ent', 'ite', 'um', 'ard', 'ow', 'ex', 'iel', 'is', 'on'],
+  ['oros', 'azar', 'ithan', 'orix', 'alon', 'avex', 'olith', 'ector', 'yrus', 'andor', 'emis', 'azul', 'orant', 'ivex'],
+  ['agon', 'imax', 'arion', 'ovant', 'ultrix', 'omega', 'atron', 'ozar', 'ithar', 'undra', 'axion', 'orrak', 'eidos', 'aximus']];
+function evoName(fam, k) {
+  if (k === 0) return makeName(Math.floor(fam / 3), fam % 3);
+  const p = nameParts(Math.floor(fam / 3)), r = mulberry32(h32(fam, 3131));
+  const mid = pickR(EV_MID, r), ends = [pickR(EV_END[1], r), pickR(EV_END[2], r), pickR(EV_END[3], r)];
+  return capName(p.root + mid + ends[k - 1]);
+}
+const MOVE_ADJ = {
+  Flame: ['Ember', 'Blaze', 'Cinder', 'Scorch', 'Magma', 'Inferno', 'Flare', 'Pyro'],
+  Aqua: ['Bubble', 'Tide', 'Torrent', 'Hydro', 'Surf', 'Riptide', 'Splash', 'Abyss'],
+  Leaf: ['Vine', 'Petal', 'Thorn', 'Bloom', 'Seed', 'Bramble', 'Moss', 'Root'],
+  Spark: ['Volt', 'Static', 'Thunder', 'Zap', 'Ion', 'Shock', 'Plasma', 'Arc'],
+  Frost: ['Ice', 'Frost', 'Hail', 'Glacier', 'Chill', 'Blizzard', 'Snow', 'Crystal'],
+  Stone: ['Rock', 'Boulder', 'Quake', 'Gravel', 'Crag', 'Granite', 'Pebble', 'Tectonic'],
+  Wind: ['Gust', 'Gale', 'Cyclone', 'Breeze', 'Aero', 'Squall', 'Sky', 'Vortex'],
+  Shadow: ['Shade', 'Night', 'Phantom', 'Dusk', 'Hex', 'Void', 'Gloom', 'Spectral'],
+  Light: ['Prism', 'Radiant', 'Holy', 'Dawn', 'Lumen', 'Halo', 'Solar', 'Glimmer'],
+  Toxic: ['Venom', 'Sludge', 'Acid', 'Toxin', 'Blight', 'Miasma', 'Spore', 'Ooze'],
+  Normal: ['Quick', 'Body', 'Wild', 'Rapid', 'Hyper', 'Mega', 'Tail', 'Double'],
+};
+const MOVE_NOUN = [
+  ['Jab', 'Nip', 'Flick', 'Swipe', 'Tap', 'Bump', 'Peck', 'Puff'],
+  ['Fang', 'Claw', 'Wave', 'Strike', 'Bolt', 'Slash', 'Pulse', 'Kick', 'Lash'],
+  ['Storm', 'Cannon', 'Crash', 'Barrage', 'Fury', 'Burst', 'Hammer', 'Rampage'],
+  ['Cataclysm', 'Nova', 'Annihilation', 'Tempest', 'Requiem', 'Supernova', 'Apocalypse', 'Judgment'],
+];
+const BUFFS = [['War Cry', 'atk'], ['Sharpen', 'atk'], ['Power Up', 'atk'], ['Harden', 'def'], ['Iron Shell', 'def'], ['Barrier', 'def'], ['Agility', 'spd'], ['Tailwind', 'spd']];
+const DEBUFFS = [['Growl', 'atk'], ['Leer', 'def'], ['Scary Face', 'spd'], ['Tickle', 'atk'], ['Glare', 'spd'], ['Screech', 'def']];
+const HEALS = ['Recover', 'Regrow', 'Mend', 'Rest Up', 'Soothe'];
+function makeDmg(type, tier, r) {
+  const ranges = [[35, 50], [60, 75], [85, 100], [115, 130]];
+  const [a, b] = ranges[tier];
+  return { name: pickR(MOVE_ADJ[type], r) + ' ' + pickR(MOVE_NOUN[tier], r), type, power: Math.round((a + r() * (b - a)) / 5) * 5, acc: [100, 95, 90, 80][tier], kind: 'dmg' };
+}
+function makeBuff(r, amt) { const b = pickR(BUFFS, r); return { name: b[0], type: 'Normal', kind: 'buff', stat: b[1], amt: amt || 1, acc: 100 }; }
+function makeDebuff(r) { const b = pickR(DEBUFFS, r); return { name: b[0], type: 'Normal', kind: 'debuff', stat: b[1], amt: 1, acc: 100 }; }
+function makeHeal(r) { return { name: pickR(HEALS, r), type: 'Normal', kind: 'heal', acc: 100 }; }
+function makeDrain(type, r) { return { name: pickR(MOVE_ADJ[type], r) + ' Drain', type, power: 55 + Math.floor(r() * 3) * 5, acc: 100, kind: 'drain' }; }
+function moveDesc(m) {
+  if (m.kind === 'dmg' || m.kind === 'drain') {
+    let s = 'Power ' + m.power + ' · Acc ' + m.acc + '%';
+    if (m.kind === 'drain') s += ' · heals half the damage';
+    const st = STATUS_BY_TYPE[m.type]; if (st && m.kind === 'dmg') s += ' · ' + Math.round(st[1] * 100) + '% ' + STATUS[st[0]].name;
+    return s;
+  }
+  if (m.kind === 'buff') return 'Raises own ' + STATN[m.stat] + (m.amt > 1 ? ' sharply' : '');
+  if (m.kind === 'debuff') return "Lowers the foe's " + STATN[m.stat];
+  return 'Restores 45% of max HP';
+}
+
+// ---------------- species ----------------
+const speciesCache = new Map();
+function famTraits(fam) {
+  const r = mulberry32(h32(fam, 1001));
+  const t1 = TYPES[fam % 10];
+  const hasSecond = r() < 0.55;
+  let t2 = TYPES[Math.floor(r() * 10)];
+  if (t2 === t1) t2 = TYPES[(fam % 10 + 3) % 10];
+  return {
+    t1, t2: hasSecond ? t2 : null, t2Stage: Math.floor(r() * 3),
+    evo1: 12 + Math.floor(r() * 9), evo2: 0, w: [r() + 0.6, r() + 0.6, r() + 0.6, r() + 0.6], sr: r(), r,
+  };
+}
+const FORM_NAMES = ['Base form', 'Evolved form', 'Super form', 'MAX form'];
+const FORM_POWER = [1, 1.12, 1.25, 1.4];
+const UNLOCK_AT = [0, 0, 0, 1, 2]; // form needed to unlock each of the 5 attacks
+const TRAITS = {
+  tough: { name: 'Thick Hide', icon: '🛡️', desc: 'Takes 15% less damage.' },
+  fierce: { name: 'Fierce', icon: '💢', desc: 'Deals 15% more damage.' },
+  swift: { name: 'Swift', icon: '💨', desc: 'Speed is 20% higher.' },
+  lucky: { name: 'Lucky Strike', icon: '🍀', desc: 'Lands critical hits 3× as often.' },
+  regen: { name: 'Regenerate', icon: '💚', desc: 'Heals 1/12 of its max HP every turn.' },
+  attune: { name: 'Attuned', icon: '🔆', desc: 'Attacks of its own type deal 20% more.' },
+  guard: { name: 'Pure Guard', icon: '🧿', desc: "Can't be burned, poisoned, frozen or paralyzed." },
+  vamp: { name: 'Life Steal', icon: '🩸', desc: 'Heals 20% of the damage it deals.' },
+  rich: { name: 'Treasure Nose', icon: '💰', desc: 'Earns 50% more coins when it wins a battle.' },
+};
+const TRAIT_KEYS = Object.keys(TRAITS);
+function famRarity(fam) { return familyRarity(Math.floor(fam / 3)); }
+function familyAttacks(fam, t1, sec) {
+  const r = mulberry32(h32(fam, 2020));
+  let cov = sec;
+  if (!cov) { do { cov = TYPES[Math.floor(r() * 10)]; } while (cov === t1); }
+  const x = r();
+  const special = x < 0.3 ? makeBuff(r) : x < 0.5 ? makeDebuff(r) : x < 0.75 ? makeHeal(r) : makeDrain(t1, r);
+  return [makeDmg(t1, 0, r), makeDmg(r() < 0.5 ? 'Normal' : cov, 1, r), special, makeDmg(t1, 2, r), makeDmg(cov, 3, r)];
+}
+function getSpecies(id) {
+  let s = speciesCache.get(id);
+  if (s) return s;
+  const fam = Math.floor(id / STAGES), k = id % STAGES, ofam = Math.floor(fam / 3), os = fam % 3;
+  const f = famTraits(ofam);
+  const r = mulberry32(h32(fam, 1111));
+  const rarity = familyRarity(ofam);
+  const baseTypes = [f.t1];
+  if (f.t2 && os >= f.t2Stage) baseTypes.push(f.t2);
+  const second = f.t2 || TYPES[(TYPES.indexOf(f.t1) + 1 + Math.floor(r() * 9)) % 10];
+  const gainAt = 1 + Math.floor(r() * 3), gains = baseTypes.length === 1 && r() < 0.65;
+  const types = baseTypes.slice();
+  if (gains && k >= gainAt) types.push(second);
+  const finalTypes = gains ? [f.t1, second] : baseTypes;
+  const evo1 = 14 + Math.floor(r() * 7), evo2 = evo1 + 15 + Math.floor(r() * 8), evo3 = evo2 + 16 + Math.floor(r() * 9);
+  const w = f.w.map(v => v * (0.85 + r() * 0.3)), ws = w[0] + w[1] + w[2] + w[3];
+  const total = (200 + os * 25 + k * 85 + f.sr * 40) * RARITY[rarity].mult;
+  const bs = i => Math.round(total * w[i] / ws) + 8;
+  s = {
+    id, fam, k, stage: k, ofam, os, vst: os + k, rarity, types, baseTypes, name: evoName(fam, k),
+    base: { hp: bs(0), atk: bs(1), def: bs(2), spd: bs(3) },
+    evoLvl: [evo1, evo2, evo3, null][k], evoLvls: [evo1, evo2, evo3],
+    trait: k ? TRAIT_KEYS[h32(fam, 5150 + k) % TRAIT_KEYS.length] : null,
+    unlocked: 3 + Math.min(k, 2), famT1: f.t1,
+  };
+  s.attacks = familyAttacks(fam, f.t1, finalTypes[1] || null).map(m => {
+    const c = Object.assign({}, m);
+    if (c.power) c.power = Math.round(c.power * FORM_POWER[k] / 5) * 5;
+    if (c.kind === 'buff' && k >= 3) c.amt = 2;
+    c.stars = k;
+    return c;
+  });
+  s.bst = s.base.hp + s.base.atk + s.base.def + s.base.spd;
+  if (speciesCache.size > 6000) speciesCache.clear();
+  speciesCache.set(id, s);
+  return s;
+}
+function famOfType(type, r) {
+  r = r || rnd;
+  const ti = TYPES.indexOf(type);
+  const count = Math.floor((OLD_FAMS - 1 - ti) / 10) + 1;
+  return (Math.floor(r() * count) * 10 + ti) * 3 + Math.floor(r() * 3);
+}
+function stageFor(fam, lvl, r) {
+  r = r || rnd;
+  let k = 0;
+  while (k < 3 && lvl >= getSpecies(fam * STAGES + k).evoLvl && r() < 0.8) k++;
+  return k;
+}
+function traitOf(c) { return getSpecies(c.sid).trait; }
+function stars(k) { return k ? '<span class="stars" title="Attack power level ' + k + '">' + '★'.repeat(k) + '</span>' : ''; }
+function traitChip(key, small) { if (!key) return ''; const t = TRAITS[key]; return '<span class="trait' + (small ? ' sm' : '') + '" title="' + esc(t.desc) + '">' + t.icon + ' ' + t.name + '</span>'; }
+function formBadge(sp) { return '<span class="fbadge f' + sp.k + '" title="' + FORM_NAMES[sp.k] + '">' + (sp.k === 3 ? 'MAX' : 'Form ' + (sp.k + 1)) + '</span>'; }
+function defaultMoves(sp) {
+  const idx = []; for (let i = 0; i < sp.unlocked; i++) idx.push(i);
+  if (idx.length <= 3) return idx;
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  return idx.slice(0, 3).sort((a, b) => a - b);
+}
+
+// ---------------- creature instances ----------------
+function makeCreature(sid, lvl, shiny) {
+  const sp = getSpecies(sid);
+  const c = { uid: S ? S.uid++ : 0, sid, lvl, xp: 0, shiny: !!shiny, iv: [randInt(0, 15), randInt(0, 15), randInt(0, 15), randInt(0, 15)], moves: defaultMoves(sp), hp: 1, status: null };
+  c.hp = maxHp(c);
+  return c;
+}
+const IVI = { hp: 0, atk: 1, def: 2, spd: 3 };
+function stat(c, k) {
+  const sp = getSpecies(c.sid), iv = c.iv[IVI[k]];
+  if (k === 'hp') return Math.floor((2 * sp.base.hp + iv) * c.lvl / 100) + c.lvl + 10;
+  return Math.floor((2 * sp.base[k] + iv) * c.lvl / 100) + 5;
+}
+function maxHp(c) { return stat(c, 'hp'); }
+function cname(c) { return getSpecies(c.sid).name; }
+function xpNeed(l) { return Math.floor(10 + 2.5 * Math.pow(l, 1.8)); }
+function moveOf(c, slot) { return getSpecies(c.sid).attacks[c.moves[slot]]; }
+function stageMult(s) { return s >= 0 ? (2 + s) / 2 : 2 / (2 - s); }
+function eff(c, k) {
+  let v = stat(c, k) * stageMult(c.bs ? c.bs[k] : 0);
+  if (k === 'spd' && c.status === 'para') v *= 0.5;
+  if (k === 'spd' && traitOf(c) === 'swift') v *= 1.2;
+  return v;
+}
+
+// ---------------- sprite generator ----------------
+const spriteCache = new Map();
+function getSprite(sid, shiny, sil) {
+  const key = sid * 4 + (shiny ? 1 : 0) + (sil ? 2 : 0);
+  let cv = spriteCache.get(key);
+  if (cv) return cv;
+  cv = genSprite(sid, shiny, sil);
+  if (spriteCache.size > 1500) spriteCache.clear();
+  spriteCache.set(key, cv);
+  return cv;
+}
+function genSprite(sid, shiny, sil) {
+  const sp = getSpecies(sid), fam = sp.ofam, st = sp.vst, K = sp.k, cst = Math.min(st, 3);
+  const N = 32, cx = 15.5;
+  const r = mulberry32(h32(fam, 4242));
+  const rs = mulberry32(h32(fam, 4343 + Math.max(sp.os, 1))); // stable across forms so evolved features stay
+  const g = new Uint8Array(N * N); // 0 empty 1 body 2 pattern 3 accent 4 eye 5 pupil 6 mouth 7 outline
+  const get = (x, y) => (x < 0 || y < 0 || x >= N || y >= N) ? 0 : g[y * N + x];
+  const put = (x, y, v) => { x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= N || y >= N) return; g[y * N + x] = v; };
+  const sym = (x, y, v) => { x = Math.round(x); put(x, y, v); put(N - 1 - x, y, v); };
+  const nseed = h32(fam, 77);
+  const nz = (x, y, s) => (h32(nseed, Math.min(x, N - 1 - x) >> 1, y >> 1, s || 0) % 1000) / 1000;
+
+  // family traits
+  const bodyType = Math.floor(r() * 4);
+  const headSep = r() < 0.55;
+  const legs = [0, 2, 2, 4, 4][Math.floor(r() * 5)];
+  let ear = Math.floor(r() * 5);
+  const wingsT = r() < 0.2 || (sp.baseTypes.includes('Wind') && r() < 0.7);
+  const arms = r() < 0.55;
+  const pattern = Math.floor(r() * 4);
+  const cyclops = r() < 0.12;
+  const eyeSz = 2 + (r() < 0.35 ? 1 : 0);
+  const fangs = r() < 0.3;
+  const tail = r() < 0.55;
+  const crestT = r() < 0.25;
+  const mouthW = r() < 0.5 ? 1 : 2;
+  const rxR = r(), ryR = r(), hrR = r(), legR = r(), earR = r();
+  if (st >= 1 && ear === 0) ear = 1 + Math.floor(rs() * 4);
+  const wings = wingsT || (st >= 2 && rs() < (K >= 2 ? 0.75 : 0.45));
+  const crest = crestT || (st >= 2 && rs() < (K >= 3 ? 0.8 : 0.5));
+
+  // sizes
+  const grow = Math.min(st, 2) * 1.9 + Math.max(0, st - 2) * 0.9;
+  let rx = 5.5 + grow + rxR * 2.5, ry = 5 + grow + ryR * 2.5;
+  if (bodyType === 1) { rx *= 0.8; ry *= 1.2; } else if (bodyType === 2) { rx *= 1.25; ry *= 0.85; }
+  rx = Math.min(rx, st > 2 ? 13.2 : 12.5); ry = Math.min(ry, st > 2 ? 11 : 10.5);
+  const legH = legs ? 2 + Math.floor(legR * 2) + (st > 0 ? 1 : 0) : 0;
+  const cy = 30.5 - legH - ry;
+
+  // head
+  let hcy, hr, headTop, eyeY, eyeDX;
+  if (headSep) {
+    hr = 3.8 + Math.min(st, 2.6) * 1.3 + hrR * 1.8;
+    hcy = cy - ry - hr * 0.35;
+    const earSpace = ear ? 3 + cst : 1;
+    hcy = Math.max(hcy, hr + earSpace + 0.5);
+    headTop = hcy - hr; eyeY = hcy - hr * 0.1; eyeDX = Math.max(1.8, hr * 0.48);
+  } else {
+    hr = rx; hcy = cy; headTop = cy - ry; eyeY = cy - ry * 0.4; eyeDX = Math.max(2, rx * 0.4);
+  }
+
+  // wings (behind body)
+  if (wings) {
+    const ax = cx - rx * 0.4, ay = cy - ry * 0.5;
+    const bx = Math.max(0.5, cx - rx - 4 - cst * 1.5), by = Math.max(1, cy - ry - 2 - cst);
+    const qx = cx - rx * 0.55, qy = cy + ry * 0.35;
+    const area = (p1x, p1y, p2x, p2y, p3x, p3y) => (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
+    for (let y = 0; y < N; y++) for (let x = 0; x < 16; x++) {
+      const px = x + 0.5, py = y + 0.5;
+      const d1 = area(px, py, ax, ay, bx, by), d2 = area(px, py, bx, by, qx, qy), d3 = area(px, py, qx, qy, ax, ay);
+      const neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
+      if (!(neg && pos) && nz(x, y, 5) > 0.12) sym(x, y, 3);
+    }
+  }
+  // body
+  for (let y = 0; y < N; y++) for (let x = 0; x < 16; x++) {
+    const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
+    const k = bodyType === 3 ? 0.72 + 0.34 * clamp((dy + 1) / 2, 0, 1) : 1;
+    const d = (dx / k) * (dx / k) + dy * dy;
+    if (d < 1 + (nz(x, y, 1) - 0.5) * 0.3) sym(x, y, 1);
+  }
+  // legs
+  if (legs) {
+    const lxs = legs === 2 ? [cx - rx * 0.45] : [cx - rx * 0.78, cx - rx * 0.32];
+    const lw = 2 + (st > 1 ? 1 : 0);
+    for (const lx of lxs) {
+      for (let y = Math.floor(cy + ry * 0.6); y <= Math.floor(cy + ry + legH); y++) for (let w = 0; w < lw; w++) sym(lx - lw / 2 + w, y, 1);
+      const fy = Math.floor(cy + ry + legH);
+      sym(lx - lw / 2 - 1, fy, 2);
+    }
+  }
+  // arms
+  if (arms) {
+    const ay = Math.round(cy - ry * 0.05);
+    for (let x = Math.round(cx - rx - 2); x <= Math.round(cx - rx + 1); x++) { sym(x, ay, 1); sym(x, ay + 1, 1); }
+    sym(cx - rx - 2, ay + 2, 1);
+  }
+  // head
+  if (headSep) {
+    for (let y = 0; y < N; y++) for (let x = 0; x < 16; x++) {
+      const dx = (x + 0.5 - cx) / hr, dy = (y + 0.5 - hcy) / (hr * 0.92);
+      if (dx * dx + dy * dy < 1) sym(x, y, 1);
+    }
+  }
+  // ears / horns / antennae
+  const eh = Math.min(3 + cst + Math.floor(earR * 2), Math.floor(headTop) - 0);
+  const ht = Math.round(headTop);
+  if (ear === 1 && eh > 0) { // pointy ears
+    const bx = cx - hr * 0.55;
+    for (let i = 0; i <= eh; i++) { const w = Math.max(1, Math.round((eh - i) / eh * 2.6)); for (let k = 0; k < w; k++) sym(bx - w / 2 + k + 0.5, ht + 1 - i, i > eh * 0.5 ? 3 : 1); }
+  } else if (ear === 2 && eh > 0) { // horns
+    const bx = cx - hr * 0.35;
+    for (let i = 0; i <= eh + 1; i++) { const x = bx - i * 0.55; sym(x, ht + 1 - i, 3); if (i < 2) sym(x - 1, ht + 1 - i, 3); }
+  } else if (ear === 3 && eh > 0) { // antennae
+    const bx = cx - hr * 0.3;
+    for (let i = 0; i <= eh; i++) sym(bx - i * 0.35, ht - i, 6);
+    const tx = bx - eh * 0.35, ty = ht - eh;
+    sym(tx, ty, 3); sym(tx - 1, ty, 3); sym(tx, ty - 1, 3); sym(tx - 1, ty - 1, 3);
+  } else if (ear === 4) { // round ears
+    const er = 2 + cst * 0.5, ex = cx - hr * 0.7, ey = headTop + 1;
+    for (let y = 0; y < N; y++) for (let x = 0; x < 16; x++) {
+      const dx = x + 0.5 - ex, dy = y + 0.5 - ey;
+      if (dx * dx + dy * dy < er * er) sym(x, y, get(x, y) === 1 && dy > 0 ? 1 : (dx * dx + dy * dy < (er - 1) * (er - 1) ? 2 : 1));
+    }
+  }
+  if (crest) {
+    for (let k = 0; k < 3; k++) {
+      const x = cx - 0.5 - (k === 0 ? 0 : 2 * k), h = 2 + cst + (k === 0 ? 1 : 0);
+      for (let i = 0; i < h; i++) sym(x, ht - i, 3);
+    }
+  }
+  // pattern
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    if (g[y * N + x] !== 1) continue;
+    const inBody = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 < 0.95;
+    if (!inBody) continue;
+    if (pattern === 0) {
+      const dx = (x + 0.5 - cx) / (rx * 0.58), dy = (y + 0.5 - (cy + ry * 0.25)) / (ry * 0.6);
+      if (dx * dx + dy * dy < 1) g[y * N + x] = 2;
+    } else if (pattern === 1) {
+      if (nz(x, y, 9) < 0.16) g[y * N + x] = 2;
+    } else if (pattern === 2) {
+      if ((y - Math.floor(cy - ry)) % 4 === 0 && y < cy + ry * 0.6) g[y * N + x] = 2;
+    }
+  }
+  // tail (asymmetric, right side)
+  if (tail) {
+    let tx = cx + rx * 0.85, ty = cy + ry * 0.35;
+    const len = 4 + cst * 2;
+    const up = 0.5 + nz(3, 3, 11);
+    for (let i = 0; i < len; i++) {
+      tx += 0.9; ty -= up * 0.6;
+      const v = i >= len - 2 ? 3 : 1;
+      for (const [ox, oy] of [[0, 0], [0, 1]]) {
+        const X = Math.round(tx + ox), Y = Math.round(ty + oy);
+        if (X >= 0 && X < N && Y >= 0 && Y < N && g[Y * N + X] === 0) g[Y * N + X] = v;
+      }
+    }
+  }
+  // eyes
+  const ey = Math.round(eyeY - eyeSz / 2);
+  if (cyclops) {
+    const s = eyeSz + 1, ex = Math.round(cx - s / 2 + 0.5);
+    for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) put(ex + x, ey + y, 4);
+    put(ex + Math.floor(s / 2), ey + s - 1, 5); put(ex + Math.floor(s / 2) - 1, ey + s - 1, 5);
+  } else {
+    const ex = Math.round(cx - eyeDX - eyeSz / 2);
+    for (let y = 0; y < eyeSz; y++) for (let x = 0; x < eyeSz; x++) sym(ex + x, ey + y, 4);
+    sym(ex + eyeSz - 1, ey + eyeSz - 1, 5);
+    if (eyeSz === 3) sym(ex + eyeSz - 2, ey + eyeSz - 1, 5);
+    if (st >= 2) sym(ex - 1, ey - 1, 6); // fierce brow
+  }
+  // mouth
+  let my = Math.round(eyeY + eyeSz / 2 + 1.5);
+  if (headSep) my = Math.min(my, Math.round(hcy + hr * 0.6));
+  for (let k = 0; k < mouthW; k++) sym(15 - k, my, 6);
+  if (fangs) { sym(15 - mouthW + 1, my + 1, 4); }
+
+  // evolution extras
+  if (K >= 1) { // shoulder spikes
+    const sy = Math.round(cy - ry * 0.55), sx = cx - rx * 0.62;
+    for (let i = 0; i < 1 + K; i++) { const X = Math.round(sx - i * 0.6), Y = sy - 1 - i; if (get(X, Y) === 0) sym(X, Y, 3); }
+  }
+  if (K >= 2) { // armor plate on chest
+    const ay = Math.round(cy + ry * 0.05);
+    for (let x = Math.round(cx - rx * 0.35); x < 16; x++) if (get(x, ay) === 1 || get(x, ay) === 2) sym(x, ay, 3);
+  }
+  if (K >= 3) { // crown
+    const cyT = Math.round(headTop) - 1;
+    if (cyT >= 2) {
+      for (let x = 12; x < 16; x++) if (get(x, cyT) === 0 || get(x, cyT) === 1) sym(x, cyT, 8);
+      for (const x of [12, 14]) { if (get(x, cyT - 1) === 0) sym(x, cyT - 1, 8); }
+      if (get(12, cyT - 2) === 0) sym(12, cyT - 2, 8);
+    }
+  }
+  // outline
+  const out = g.slice();
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    if (g[y * N + x] !== 0) continue;
+    if (get(x - 1, y) || get(x + 1, y) || get(x, y - 1) || get(x, y + 1)) out[y * N + x] = 7;
+  }
+
+  // colours
+  const cr = mulberry32(h32(fam, 9191));
+  const t1 = sp.types[0];
+  const tone = TYPE_TONE[t1] || [70, 52];
+  let hue = TYPE_HUE[t1] + (cr() - 0.5) * 44;
+  const sat = tone[0] + (cr() - 0.5) * 20, lig = tone[1] + (cr() - 0.5) * 10;
+  let hue2, sat2, lig2;
+  if (sp.types[1]) { hue2 = TYPE_HUE[sp.types[1]] + (cr() - 0.5) * 20; sat2 = 70; lig2 = 58; }
+  else if (cr() < 0.55) { hue2 = hue; sat2 = sat - 15; lig2 = lig + 22; }
+  else { hue2 = hue + 150 + cr() * 60; sat2 = 60; lig2 = 60; }
+  const ac = cr();
+  let hue3 = ac < 0.4 ? hue + 40 + cr() * 40 : ac < 0.7 ? 45 : hue + 180;
+  const lig3 = st >= 2 ? 62 : 55;
+  if (shiny) { hue += 150; hue2 += 150; hue3 += 150; }
+
+  const cv = document.createElement('canvas');
+  cv.width = N; cv.height = N;
+  const ctx = cv.getContext('2d');
+  const empty = (x, y) => { const v = out[y * N + x]; return !v || v === 7; };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const v = out[y * N + x];
+    if (!v) continue;
+    let col;
+    if (sil) col = v === 7 ? '#0b0d1a' : '#262a44';
+    else {
+      let shade = 0;
+      if (v <= 3 || v === 8) {
+        if (y > 0 && empty(x, y - 1)) shade = 9;
+        else if (y < N - 1 && empty(x, y + 1)) shade = -12;
+        else if (x > 0 && empty(x - 1, y)) shade = 3;
+      }
+      if (v === 1) col = hsl(hue, sat, lig + shade);
+      else if (v === 2) col = hsl(hue2, sat2, lig2 + shade);
+      else if (v === 3) col = hsl(hue3, 75, lig3 + shade);
+      else if (v === 4) col = '#ffffff';
+      else if (v === 5) col = '#141626';
+      else if (v === 6) col = hsl(hue, sat * 0.6, Math.max(12, lig - 32));
+      else if (v === 8) col = hsl(shiny ? 200 : 46, 95, 58 + shade);
+      else col = K >= 3 ? hsl(hue3, 55, 16) : hsl(hue, sat * 0.7, 13);
+    }
+    ctx.fillStyle = col;
+    ctx.fillRect(x, y, 1, 1);
+  }
+  return cv;
+}
+
+// ---------------- world ----------------
+const TILE = 32, CHUNK = 16;
+let WSEED = 1, SPAWN = null;
+const T = { DEEP: 0, SHALLOW: 1, SAND: 2, GRASS: 3, TALL: 4, FLOWER: 5, FOREST: 6, TREE: 7, FTALL: 8, DESERT: 9, DUNE: 10, CACTUS: 11, SNOW: 12, SNOWTALL: 13, PINE: 14, SWAMP: 15, REEDS: 16, VOLC: 17, ASH: 18, LAVA: 19, ROCK: 20, RUBBLE: 21, MOUNTAIN: 22, SHRINE: 23 };
+const TI = [];
+function defTile(id, walk, region, enc) { TI[id] = { walk, region, enc, land: walk && id !== T.SHALLOW && id !== T.SHRINE }; }
+defTile(T.DEEP, false, 'Coast', null); defTile(T.SHALLOW, true, 'Coast', 'coast'); defTile(T.SAND, true, 'Coast', null);
+defTile(T.GRASS, true, 'Meadow', null); defTile(T.TALL, true, 'Meadow', 'meadow'); defTile(T.FLOWER, true, 'Meadow', null);
+defTile(T.FOREST, true, 'Forest', null); defTile(T.TREE, false, 'Forest', null); defTile(T.FTALL, true, 'Forest', 'forest');
+defTile(T.DESERT, true, 'Desert', null); defTile(T.DUNE, true, 'Desert', 'desert'); defTile(T.CACTUS, false, 'Desert', null);
+defTile(T.SNOW, true, 'Tundra', null); defTile(T.SNOWTALL, true, 'Tundra', 'tundra'); defTile(T.PINE, false, 'Tundra', null);
+defTile(T.SWAMP, true, 'Swamp', null); defTile(T.REEDS, true, 'Swamp', 'swamp');
+defTile(T.VOLC, true, 'Volcano', null); defTile(T.ASH, true, 'Volcano', 'volcano'); defTile(T.LAVA, false, 'Volcano', null);
+defTile(T.ROCK, true, 'Highlands', null); defTile(T.RUBBLE, true, 'Highlands', 'highlands'); defTile(T.MOUNTAIN, false, 'Highlands', null);
+defTile(T.SHRINE, true, 'Shrine', null);
+const BIOMES = {
+  meadow: { name: 'Meadow', types: ['Leaf', 'Wind', 'Spark', 'Light'], sky: '#a8dcff', ground: '#77c25e' },
+  forest: { name: 'Forest', types: ['Leaf', 'Toxic', 'Shadow', 'Wind'], sky: '#7fb88a', ground: '#3f7d3a' },
+  desert: { name: 'Desert', types: ['Flame', 'Stone', 'Light'], sky: '#ffd99a', ground: '#e2b867' },
+  tundra: { name: 'Tundra', types: ['Frost', 'Wind', 'Light'], sky: '#d4ecff', ground: '#eef6fb' },
+  swamp: { name: 'Swamp', types: ['Toxic', 'Aqua', 'Shadow', 'Leaf'], sky: '#9fb49a', ground: '#55693a' },
+  volcano: { name: 'Volcano', types: ['Flame', 'Stone', 'Shadow'], sky: '#a7544a', ground: '#4b3b3b' },
+  coast: { name: 'Coast', types: ['Aqua', 'Stone', 'Spark'], sky: '#9fe0ff', ground: '#4c95d4' },
+  highlands: { name: 'Highlands', types: ['Stone', 'Wind', 'Frost', 'Spark'], sky: '#b9c8dc', ground: '#8a857e' },
+};
+const REGION_BIOME = { Meadow: 'meadow', Forest: 'forest', Desert: 'desert', Tundra: 'tundra', Swamp: 'swamp', Volcano: 'volcano', Coast: 'coast', Highlands: 'highlands', Shrine: 'meadow' };
+
+function vnoise(x, y, salt) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = h32(WSEED, xi, yi, salt) / 4294967296, b = h32(WSEED, xi + 1, yi, salt) / 4294967296,
+    c = h32(WSEED, xi, yi + 1, salt) / 4294967296, d = h32(WSEED, xi + 1, yi + 1, salt) / 4294967296;
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y, salt, oct) {
+  let s = 0, amp = 1, f = 1, n = 0;
+  for (let i = 0; i < oct; i++) { s += amp * vnoise(x * f + i * 17.3, y * f - i * 9.1, salt + i * 101); n += amp; amp *= 0.5; f *= 2; }
+  return s / n;
+}
+function stretch(v, k) { return clamp((v - 0.5) * k + 0.5, 0, 1); }
+function genBase(x, y) {
+  const e = stretch(fbm(x / 56, y / 56, 11, 4), 2.2);
+  if (e < 0.20) return T.DEEP;
+  if (e < 0.245) return T.SHALLOW;
+  if (e < 0.28) return T.SAND;
+  const dn = h32(WSEED, x, y, 99) / 4294967296;
+  const g = fbm(x / 6.5, y / 6.5, 44, 2);
+  if (e > 0.90) return T.MOUNTAIN;
+  if (e > 0.82) return dn < 0.15 ? T.MOUNTAIN : (g > 0.56 ? T.RUBBLE : T.ROCK);
+  const t = stretch(fbm(x / 190, y / 190, 22, 3), 2.4);
+  const m = stretch(fbm(x / 110, y / 110, 33, 3), 2.4);
+  if (t > 0.70) {
+    const v = stretch(fbm(x / 75, y / 75, 55, 2), 2.2);
+    if (v > 0.6) {
+      if (fbm(x / 8, y / 8, 66, 2) > 0.66) return T.LAVA;
+      return g > 0.56 ? T.ASH : T.VOLC;
+    }
+    if (m < 0.55) { if (dn < 0.03) return T.CACTUS; return g > 0.58 ? T.DUNE : T.DESERT; }
+  }
+  if (t < 0.27) { if (dn < 0.07) return T.PINE; return g > 0.55 ? T.SNOWTALL : T.SNOW; }
+  if (m > 0.70) {
+    if (fbm(x / 9, y / 9, 77, 2) > 0.67) return T.SHALLOW;
+    if (dn < 0.05) return T.TREE;
+    return g > 0.53 ? T.REEDS : T.SWAMP;
+  }
+  if (m > 0.47) { if (dn < 0.26) return T.TREE; return g > 0.56 ? T.FTALL : T.FOREST; }
+  if (g > 0.57) return T.TALL;
+  if (dn < 0.02) return T.TREE;
+  if (dn < 0.06) return T.FLOWER;
+  return T.GRASS;
+}
+const chunks = new Map(), shrineCache = new Map();
+function resetWorld() { chunks.clear(); shrineCache.clear(); }
+function shrineIn(cx, cy) {
+  const k = cx + ',' + cy;
+  if (shrineCache.has(k)) return shrineCache.get(k);
+  let res = null;
+  if (SPAWN && Math.floor((SPAWN.x + 2) / CHUNK) === cx && Math.floor(SPAWN.y / CHUNK) === cy) res = { x: SPAWN.x + 2, y: SPAWN.y };
+  else if (h32(WSEED, cx, cy, 500) % 100 < 22) {
+    for (let a = 0; a < 4 && !res; a++) {
+      const hh = h32(WSEED, cx, cy, 501 + a);
+      const x = cx * CHUNK + 2 + hh % 12, y = cy * CHUNK + 2 + (hh >>> 8) % 12;
+      if (TI[genBase(x, y)].land) res = { x, y };
+    }
+  }
+  shrineCache.set(k, res);
+  return res;
+}
+function trainersIn(cx, cy, sh) {
+  const h = h32(WSEED, cx, cy, 600) % 100;
+  const n = (h < 38 ? 1 : 0) + (h < 9 ? 1 : 0);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const hh = h32(WSEED, cx, cy, 601 + i);
+    const x = cx * CHUNK + 1 + hh % 14, y = cy * CHUNK + 1 + (hh >>> 8) % 14;
+    if (!TI[genBase(x, y)].land) continue;
+    if (sh && sh.x === x && sh.y === y) continue;
+    if (SPAWN && Math.abs(x - SPAWN.x) + Math.abs(y - SPAWN.y) < 9) continue;
+    if (out.some(o => o.x === x && o.y === y)) continue;
+    out.push({ x, y, h: hh });
+  }
+  return out;
+}
+function getChunk(cx, cy) {
+  const k = cx + ',' + cy;
+  let ch = chunks.get(k);
+  if (ch) return ch;
+  const tiles = new Uint8Array(CHUNK * CHUNK);
+  for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) tiles[j * CHUNK + i] = genBase(cx * CHUNK + i, cy * CHUNK + j);
+  const sh = shrineIn(cx, cy);
+  if (sh) tiles[(sh.y - cy * CHUNK) * CHUNK + (sh.x - cx * CHUNK)] = T.SHRINE;
+  ch = { cx, cy, tiles, shrine: sh, trainers: trainersIn(cx, cy, sh), canvas: null };
+  chunks.set(k, ch);
+  return ch;
+}
+function tileAt(x, y) {
+  const cx = Math.floor(x / CHUNK), cy = Math.floor(y / CHUNK);
+  return getChunk(cx, cy).tiles[(y - cy * CHUNK) * CHUNK + (x - cx * CHUNK)];
+}
+function trainerAt(x, y) {
+  const ch = getChunk(Math.floor(x / CHUNK), Math.floor(y / CHUNK));
+  return ch.trainers.find(t => t.x === x && t.y === y) || null;
+}
+function walkable(x, y) { return TI[tileAt(x, y)].walk && !trainerAt(x, y); }
+function findSpawn() {
+  const ok = (x, y) => genBase(x, y) === T.GRASS && genBase(x + 1, y) === T.GRASS && genBase(x + 2, y) === T.GRASS && genBase(x, y + 1) !== T.DEEP;
+  for (let r = 0; r < 600; r++) {
+    for (let i = -r; i <= r; i++) {
+      for (const [x, y] of [[i, -r], [i, r], [-r, i], [r, i]]) if (ok(x, y)) return { x, y };
+    }
+  }
+  return { x: 0, y: 0 };
+}
+function wildBase(x, y) { if (!SPAWN) return 3; return clamp(Math.floor(3 + Math.hypot(x - SPAWN.x, y - SPAWN.y) / 24), 2, 98); }
+function wildLevel(x, y) { return clamp(wildBase(x, y) + randInt(-1, 2), 2, 100); }
+
+// ---------------- tile art ----------------
+function drawTile(c, t, X, Y, x, y) {
+  const d = h32(WSEED, x, y, 7);
+  const r = mulberry32(d);
+  const px = (col, a, b, w, h) => { c.fillStyle = col; c.fillRect(X + a, Y + b, w, h); };
+  const fill = col => px(col, 0, 0, 32, 32);
+  const speck = (col, n, w, h) => { for (let i = 0; i < n; i++) px(col, Math.floor(r() * (32 - w)), Math.floor(r() * (32 - h)), w, h); };
+  const blades = (base, dark, light, n) => {
+    fill(base);
+    for (let i = 0; i < n; i++) {
+      const bx = 3 + Math.floor(r() * 24), by = 4 + Math.floor(r() * 20);
+      px(dark, bx, by, 2, 7); px(dark, bx - 3, by + 3, 2, 4); px(dark, bx + 3, by + 2, 2, 5); px(light, bx, by, 2, 2);
+    }
+  };
+  const circle = (col, ox, oy, rad) => { c.fillStyle = col; c.beginPath(); c.arc(X + ox, Y + oy, rad, 0, 6.2832); c.fill(); };
+  switch (t) {
+    case T.DEEP: fill('#1d4a86'); speck('#255a9a', 2, 7, 2); break;
+    case T.SHALLOW: fill('#3d86c9'); speck('#7cbcec', 2, 8, 2); break;
+    case T.SAND: fill('#e6d395'); speck('#d4bd78', 4, 2, 2); break;
+    case T.GRASS: fill('#63b350'); speck('#55a044', 5, 2, 3); break;
+    case T.FLOWER: fill('#63b350'); speck('#55a044', 3, 2, 3); for (let i = 0; i < 3; i++) { const fx = 4 + Math.floor(r() * 22), fy = 4 + Math.floor(r() * 22); px(pickR(['#ff6b8a', '#ffd23d', '#ffffff', '#b98cff'], r), fx, fy, 4, 4); px('#ffe9a8', fx + 1, fy + 1, 2, 2); } break;
+    case T.TALL: blades('#4f9e40', '#2f6e27', '#8ad874', 5); break;
+    case T.FOREST: fill('#3f7f39'); speck('#386f32', 4, 3, 3); break;
+    case T.FTALL: blades('#3b7535', '#1f4d1d', '#5fae54', 5); break;
+    case T.TREE: fill('#3f7f39'); px('#5b3b22', 13, 19, 6, 11); circle('#225c28', 16, 13, 12); circle('#2f7a34', 13, 10, 7); circle('#3f9444', 11, 8, 3); break;
+    case T.DESERT: fill('#ebc77d'); speck('#dcb46a', 4, 3, 2); break;
+    case T.DUNE: fill('#e0b466'); for (let i = 0; i < 3; i++) { const yy = 6 + i * 9 + Math.floor(r() * 3); px('#c99a4c', 3 + Math.floor(r() * 6), yy, 18, 2); px('#f2d08c', 3 + Math.floor(r() * 6), yy - 2, 14, 2); } break;
+    case T.CACTUS: fill('#ebc77d'); px('#2f8a45', 13, 6, 6, 24); px('#2f8a45', 6, 12, 4, 8); px('#2f8a45', 6, 18, 8, 3); px('#2f8a45', 22, 9, 4, 8); px('#2f8a45', 18, 15, 8, 3); px('#4fb064', 14, 7, 2, 21); break;
+    case T.SNOW: fill('#eef5fb'); speck('#d5e4f0', 4, 3, 2); break;
+    case T.SNOWTALL: blades('#e1eef7', '#8fbcd8', '#ffffff', 5); break;
+    case T.PINE: fill('#eef5fb'); px('#5b3b22', 14, 24, 4, 7); c.fillStyle = '#2c5d48'; c.beginPath(); c.moveTo(X + 16, Y + 2); c.lineTo(X + 28, Y + 26); c.lineTo(X + 4, Y + 26); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(X + 16, Y + 2); c.lineTo(X + 21, Y + 11); c.lineTo(X + 11, Y + 11); c.fill(); break;
+    case T.SWAMP: fill('#566c3b'); speck('#4a5e31', 4, 4, 3); speck('#6b8048', 2, 3, 2); break;
+    case T.REEDS: fill('#4e6334'); for (let i = 0; i < 6; i++) { const bx = 2 + Math.floor(r() * 27), by = 3 + Math.floor(r() * 14); px('#8c7d3d', bx, by, 2, 14); px('#5a3d1f', bx, by, 2, 4); } break;
+    case T.VOLC: fill('#4b3b3b'); speck('#3d2f2f', 4, 3, 3); speck('#6a4a3a', 1, 2, 2); break;
+    case T.ASH: blades('#5e4d4b', '#8b807d', '#b4aaa6', 4); break;
+    case T.LAVA: fill('#e2541b'); for (let i = 0; i < 3; i++) { const bx = Math.floor(r() * 22), by = Math.floor(r() * 22); px('#ffb02e', bx, by, 8, 6); px('#fff1a8', bx + 2, by + 2, 3, 2); } break;
+    case T.ROCK: fill('#8a8580'); speck('#79746f', 4, 3, 3); break;
+    case T.RUBBLE: fill('#7c776f'); for (let i = 0; i < 5; i++) { const bx = 2 + Math.floor(r() * 24), by = 2 + Math.floor(r() * 24), s = 3 + Math.floor(r() * 4); px('#5f5a54', bx, by + 1, s, s); px('#aaa49b', bx, by, s - 1, s - 1); } break;
+    case T.MOUNTAIN: fill('#6e6a66'); c.fillStyle = '#8f8a84'; c.beginPath(); c.moveTo(X + 1, Y + 31); c.lineTo(X + 16, Y + 2); c.lineTo(X + 31, Y + 31); c.fill(); c.fillStyle = '#5c5854'; c.beginPath(); c.moveTo(X + 16, Y + 2); c.lineTo(X + 31, Y + 31); c.lineTo(X + 20, Y + 31); c.fill(); c.fillStyle = '#f4f6fa'; c.beginPath(); c.moveTo(X + 16, Y + 2); c.lineTo(X + 21, Y + 12); c.lineTo(X + 11, Y + 12); c.fill(); break;
+    case T.SHRINE: fill('#63b350'); circle('#8f8aa8', 16, 22, 13); circle('#b9b5d2', 16, 21, 11); c.fillStyle = '#5ee6ff'; c.beginPath(); c.moveTo(X + 16, Y + 1); c.lineTo(X + 23, Y + 13); c.lineTo(X + 16, Y + 25); c.lineTo(X + 9, Y + 13); c.fill(); c.fillStyle = '#d6fbff'; c.beginPath(); c.moveTo(X + 16, Y + 4); c.lineTo(X + 19, Y + 12); c.lineTo(X + 16, Y + 18); c.fill(); break;
+  }
+}
+function chunkCanvas(ch) {
+  if (ch.canvas) return ch.canvas;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = CHUNK * TILE;
+  const c = cv.getContext('2d');
+  for (let j = 0; j < CHUNK; j++) for (let i = 0; i < CHUNK; i++) drawTile(c, ch.tiles[j * CHUNK + i], i * TILE, j * TILE, ch.cx * CHUNK + i, ch.cy * CHUNK + j);
+  ch.canvas = cv;
+  return cv;
+}
+
+// ---------------- state ----------------
+const SAVE_KEY = 'creatureQuestInfinite_v1';
+let S = null, mode = 'title', battle = null, grace = 0, running = false;
+const P = { x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t: 0, moving: false, facing: 'down', walk: 0 };
+function newState(seed) {
+  return { v: 2, seed, spawn: null, px: 0, py: 0, respawn: null, coins: 150, items: { orb: 10, great: 2, ultra: 0, prism: 0, potion: 5, superp: 1, revive: 1 }, team: [], box: [], seen: {}, caught: {}, beaten: {}, uid: 1, steps: 0, wins: 0, time: 0 };
+}
+function saveGame() {
+  if (!S || !S.team.length || mode === 'title' || mode === 'starter') return;
+  S.px = P.moving ? P.tx : P.x; S.py = P.moving ? P.ty : P.y;
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S, (k, v) => k === 'bs' ? undefined : v)); } catch (e) { /* storage unavailable */ }
+}
+function loadGame() { try { const s = localStorage.getItem(SAVE_KEY); return s ? migrate(JSON.parse(s)) : null; } catch (e) { return null; } }
+function migrate(s) {
+  if (!s || s.v >= 2) return s;
+  // v1 had 3 stages per family. Every old creature is now the base form of its own 4-form family.
+  const fix = c => { c.sid = c.sid * STAGES; const sp = getSpecies(c.sid); c.moves = [0, 1, 2]; if (sp.evoLvl && c.lvl >= sp.evoLvl) c.evo = true; c.hp = Math.min(c.hp, maxHp(c)); };
+  s.team.forEach(fix); s.box.forEach(fix);
+  const remap = o => { const n = {}; for (const k in o) n[(+k) * STAGES] = 1; return n; };
+  s.seen = remap(s.seen); s.caught = remap(s.caught);
+  s.v = 2;
+  s.migrated = true;
+  return s;
+}
+function markSeen(sid) { S.seen[sid] = 1; }
+function markCaught(sid) { S.seen[sid] = 1; S.caught[sid] = 1; }
+function countKeys(o) { let n = 0; for (const k in o) n++; return n; }
+function healAll() { for (const c of S.team) { c.hp = maxHp(c); c.status = null; } }
+
+// ---------------- input ----------------
+const held = [];
+const KEYDIR = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+const DX = { up: 0, down: 0, left: -1, right: 1 }, DY = { up: -1, down: 1, left: 0, right: 0 };
+addEventListener('keydown', e => {
+  const typing = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+  if (typing) return;
+  const d = KEYDIR[e.code];
+  if (d) { if (!held.includes(d)) held.push(d); if (mode === 'world') e.preventDefault(); }
+  if (e.key === 'Shift') running = true;
+  if (mode === 'world') {
+    if (e.code === 'KeyT') openTeam(); else if (e.code === 'KeyP') openDex(); else if (e.code === 'KeyB') openBox();
+    else if (e.code === 'KeyI') openBag(); else if (e.code === 'KeyH') openHelp(); else if (e.code === 'KeyK') cloudSave(); else if (e.code === 'KeyM') openMap();
+  } else if (mode === 'panel') {
+    if (e.key === 'Escape' || (e.code === 'KeyM' && mapOpen)) closePanel();
+  } else if (mode === 'cloud' || (mode === 'title' && !$('cloudWrap').classList.contains('hidden'))) {
+    if (e.key === 'Escape') closeCloud();
+  } else if (mode === 'battle') {
+    if (!$('panelWrap').classList.contains('hidden')) { if (e.key === 'Escape' || e.code === 'KeyC') closePanel(); return; }
+    if (e.code === 'KeyY') toggleTypeInfo();
+    if (e.code === 'KeyC') openTypeChart();
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (sayResolve) sayResolve(); }
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 9) { const b = $('bActions').children[n - 1]; if (b && !b.disabled && !b.dataset.soft) b.click(); else if (b && b.onmouseenter) b.onmouseenter(); }
+    if (e.key === 'Escape' || e.key === 'Backspace') { const bk = $('bActions').querySelector('[data-back]'); if (bk) bk.click(); }
+  } else if (mode === 'evo') {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); const b = $('evoBtn'); if (!b.classList.contains('hidden')) b.click(); }
+  }
+});
+addEventListener('keyup', e => { const d = KEYDIR[e.code]; if (d) { const i = held.indexOf(d); if (i >= 0) held.splice(i, 1); } if (e.key === 'Shift') running = false; });
+addEventListener('blur', () => { held.length = 0; running = false; });
+
+// ---------------- world update & render ----------------
+const cvs = $('world'), ctx = cvs.getContext('2d');
+let VW = 0, VH = 0;
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  VW = innerWidth; VH = innerHeight;
+  cvs.width = Math.floor(VW * dpr); cvs.height = Math.floor(VH * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+addEventListener('resize', resize);
+resize();
+
+let lastChunkKey = '', shrineHint = '';
+function update(dt) {
+  if (P.moving) {
+    P.t += dt / (running ? 85 : 150);
+    P.walk += dt;
+    if (P.t >= 1) { P.moving = false; P.x = P.tx; P.y = P.ty; onArrive(); }
+  }
+  if (!P.moving && mode === 'world') {
+    const d = held[held.length - 1];
+    if (d) {
+      P.facing = d;
+      const nx = P.x + DX[d], ny = P.y + DY[d];
+      const tr = trainerAt(nx, ny);
+      if (tr) bumpTrainer(tr);
+      else if (TI[tileAt(nx, ny)].walk) { P.fx = P.x; P.fy = P.y; P.tx = nx; P.ty = ny; P.t = 0; P.moving = true; }
+    }
+  }
+}
+function onArrive() {
+  S.steps++;
+  S.px = P.x; S.py = P.y;
+  const ck = Math.floor(P.x / CHUNK) + ',' + Math.floor(P.y / CHUNK);
+  if (ck !== lastChunkKey) { lastChunkKey = ck; computeShrineHint(); pruneChunks(); }
+  const t = tileAt(P.x, P.y);
+  updateHUD();
+  if (t === T.SHRINE) { openShrine(); return; }
+  const enc = TI[t].enc;
+  if (enc) {
+    if (grace > 0) grace--;
+    else if (rnd() < 0.09) startWild(enc);
+  }
+}
+function computeShrineHint() {
+  const pcx = Math.floor(P.x / CHUNK), pcy = Math.floor(P.y / CHUNK);
+  let best = null, bd = 1e9;
+  for (let dy = -9; dy <= 9; dy++) for (let dx = -9; dx <= 9; dx++) {
+    const s = shrineIn(pcx + dx, pcy + dy);
+    if (!s) continue;
+    const dd = Math.hypot(s.x - P.x, s.y - P.y);
+    if (dd < bd) { bd = dd; best = s; }
+  }
+  if (!best) { shrineHint = '⛩️ No shrine nearby — explore!'; return; }
+  const ang = Math.atan2(best.y - P.y, best.x - P.x);
+  const dirs = ['E ➡️', 'SE ↘️', 'S ⬇️', 'SW ↙️', 'W ⬅️', 'NW ↖️', 'N ⬆️', 'NE ↗️'];
+  const di = ((Math.round(ang / (Math.PI / 4)) % 8) + 8) % 8;
+  shrineHint = bd < 1 ? '⛩️ You are at a shrine' : '⛩️ Nearest shrine: ' + Math.round(bd) + ' tiles ' + dirs[di];
+}
+function pruneChunks() {
+  const pcx = Math.floor(P.x / CHUNK), pcy = Math.floor(P.y / CHUNK);
+  for (const [k, ch] of chunks) {
+    const d = Math.max(Math.abs(ch.cx - pcx), Math.abs(ch.cy - pcy));
+    if (d > 40) chunks.delete(k);
+    else if (d > 5) ch.canvas = null;
+  }
+  if (shrineCache.size > 20000) shrineCache.clear();
+}
+function drawPerson(c, x, y, shirt, hat, facing, bob, skin, dim) {
+  c.save();
+  if (dim) c.globalAlpha = 0.55;
+  c.fillStyle = 'rgba(0,0,0,0.25)'; c.beginPath(); c.ellipse(x + 16, y + 29, 9, 3, 0, 0, 6.2832); c.fill();
+  const yb = y - bob;
+  c.fillStyle = '#2b2f4a'; c.fillRect(x + 11, yb + 22, 4, 7); c.fillRect(x + 17, yb + 22, 4, 7);
+  c.fillStyle = shirt; c.fillRect(x + 9, yb + 13, 14, 11); c.fillRect(x + 6, yb + 14, 3, 8); c.fillRect(x + 23, yb + 14, 3, 8);
+  c.fillStyle = skin; c.fillRect(x + 10, yb + 4, 12, 10); c.fillRect(x + 6, yb + 21, 3, 2); c.fillRect(x + 23, yb + 21, 3, 2);
+  c.fillStyle = hat; c.fillRect(x + 9, yb + 1, 14, 5);
+  if (facing === 'down') c.fillRect(x + 9, yb + 5, 14, 2);
+  else if (facing === 'left') c.fillRect(x + 5, yb + 5, 8, 2);
+  else if (facing === 'right') c.fillRect(x + 19, yb + 5, 8, 2);
+  else c.fillRect(x + 9, yb + 5, 14, 5);
+  c.fillStyle = '#1a1a2a';
+  if (facing === 'down') { c.fillRect(x + 12, yb + 9, 2, 2); c.fillRect(x + 18, yb + 9, 2, 2); }
+  else if (facing === 'left') c.fillRect(x + 11, yb + 9, 2, 2);
+  else if (facing === 'right') c.fillRect(x + 19, yb + 9, 2, 2);
+  c.restore();
+}
+let titleCam = { x: 0, y: 0 };
+function render(now) {
+  const W = VW, H = VH;
+  let camX, camY, ppx = 0, ppy = 0;
+  if (mode === 'title' || mode === 'starter' || !S) {
+    titleCam.x += 0.6; titleCam.y += 0.25;
+    camX = Math.round(titleCam.x); camY = Math.round(titleCam.y);
+  } else {
+    ppx = P.moving ? P.fx + (P.tx - P.fx) * P.t : P.x;
+    ppy = P.moving ? P.fy + (P.ty - P.fy) * P.t : P.y;
+    camX = Math.round(ppx * TILE + TILE / 2 - W / 2);
+    camY = Math.round(ppy * TILE + TILE / 2 - H / 2);
+  }
+  ctx.fillStyle = '#0e1122'; ctx.fillRect(0, 0, W, H);
+  const CS = CHUNK * TILE;
+  const c0x = Math.floor(camX / CS), c1x = Math.floor((camX + W) / CS);
+  const c0y = Math.floor(camY / CS), c1y = Math.floor((camY + H) / CS);
+  for (let cy = c0y; cy <= c1y; cy++) for (let cx = c0x; cx <= c1x; cx++) {
+    ctx.drawImage(chunkCanvas(getChunk(cx, cy)), cx * CS - camX, cy * CS - camY);
+  }
+  const pulse = 0.5 + 0.5 * Math.sin(now / 300);
+  for (let cy = c0y; cy <= c1y; cy++) for (let cx = c0x; cx <= c1x; cx++) {
+    const ch = getChunk(cx, cy);
+    if (ch.shrine) {
+      const sx = ch.shrine.x * TILE - camX + 16, sy = ch.shrine.y * TILE - camY + 12;
+      const gr = ctx.createRadialGradient(sx, sy, 2, sx, sy, 26 + pulse * 8);
+      gr.addColorStop(0, 'rgba(120,240,255,0.55)'); gr.addColorStop(1, 'rgba(120,240,255,0)');
+      ctx.fillStyle = gr; ctx.fillRect(sx - 40, sy - 40, 80, 80);
+    }
+    for (const tr of ch.trainers) {
+      const beaten = S && S.beaten[tr.x + ',' + tr.y];
+      const hue = tr.h % 360;
+      drawPerson(ctx, tr.x * TILE - camX, tr.y * TILE - camY, hsl(hue, 60, 50), hsl(hue + 140, 55, 40), 'down', 0, '#f1c7a1', beaten);
+      if (tr.alert && now - tr.alert < 700) {
+        ctx.fillStyle = '#fff'; ctx.fillRect(tr.x * TILE - camX + 10, tr.y * TILE - camY - 22, 12, 18);
+        ctx.fillStyle = '#e02d3c'; ctx.font = 'bold 16px sans-serif'; ctx.fillText('!', tr.x * TILE - camX + 13, tr.y * TILE - camY - 7);
+      }
+    }
+  }
+  if (S && mode !== 'title' && mode !== 'starter') {
+    const bob = P.moving ? Math.abs(Math.sin(P.walk / 60)) * 2 : 0;
+    drawPerson(ctx, Math.round(ppx * TILE - camX), Math.round(ppy * TILE - camY), '#e8413a', '#c7262f', P.facing, bob, '#f6cfa8', false);
+  }
+}
+let lastT = performance.now(), saveTimer = 0;
+function loop(now) {
+  const dt = Math.min(50, now - lastT);
+  lastT = now;
+  if (S && mode === 'world') update(dt);
+  if (S && mode !== 'title') { S.time += dt / 1000; saveTimer += dt; if (saveTimer > 8000) { saveTimer = 0; saveGame(); } }
+  render(now);
+  requestAnimationFrame(loop);
+}
+
+// ---------------- HUD ----------------
+let teamBarKey = '';
+function updateHUD() {
+  if (!S || !S.spawn) return;
+  const t = tileAt(P.x, P.y);
+  const dist = Math.round(Math.hypot(P.x - S.spawn.x, P.y - S.spawn.y));
+  $('hudStats').innerHTML =
+    '<div class="hrow"><span>💰 ' + fmt(S.coins) + '</span><span>🔴 ' + S.items.orb + '</span><span>🔵 ' + S.items.great + '</span><span>🧪 ' + S.items.potion + '</span></div>' +
+    '<div class="hrow"><span>📍 ' + TI[t].region + '</span><span class="muted">(' + P.x + ', ' + P.y + ')</span></div>' +
+    '<div class="hrow"><span>📏 ' + fmt(dist) + ' tiles from start · wild Lv ~' + wildBase(P.x, P.y) + '</span></div>' +
+    '<div class="hrow"><span>📖 ' + fmt(countKeys(S.caught)) + ' caught · ' + fmt(countKeys(S.seen)) + ' seen</span></div>' +
+    '<div class="hrow"><span>' + shrineHint + '</span></div>' +
+    '<div class="hrow"><span>🗺️ Section ' + sectionLabel(Math.floor(P.x / MAP_SIZE), Math.floor(P.y / MAP_SIZE)) + ' · <kbd>M</kbd> map</span></div>' +
+    '<div class="hrow"><span class="cloud-hud" id="cloudHud">' + cloudStatusHTML() + '</span></div>';
+  const key = S.team.map(c => c.sid + ':' + c.hp + ':' + c.lvl + ':' + c.shiny).join('|');
+  if (key !== teamBarKey) {
+    teamBarKey = key;
+    const tb = $('teamBar');
+    tb.innerHTML = S.team.map(c => {
+      const pct = c.hp / maxHp(c) * 100;
+      return '<div class="tslot' + (c.hp <= 0 ? ' dead' : '') + '" title="' + esc(cname(c)) + '">' + sprHTML(c.sid, c.shiny, 48) +
+        '<small>Lv ' + c.lvl + '</small><div class="hpbar sm"><div class="hpfill ' + hpCls(pct) + '" style="width:' + pct + '%"></div></div></div>';
+    }).join('');
+    paintSprites(tb);
+    tb.querySelectorAll('.tslot').forEach(s => s.onclick = () => { if (mode === 'world') openTeam(); });
+  }
+}
+let toastTimer;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+function hpCls(p) { return p < 20 ? 'red' : p < 50 ? 'yellow' : ''; }
+function sprHTML(sid, shiny, size, sil, cls) {
+  return '<canvas class="spr ' + (cls || '') + '" width="' + size + '" height="' + size + '" data-sid="' + sid + '" data-shiny="' + (shiny ? 1 : 0) + '" data-sil="' + (sil ? 1 : 0) + '"></canvas>';
+}
+function paintSprites(root) {
+  root.querySelectorAll('canvas.spr').forEach(cv => {
+    const c = cv.getContext('2d');
+    c.imageSmoothingEnabled = false;
+    c.clearRect(0, 0, cv.width, cv.height);
+    c.drawImage(getSprite(+cv.dataset.sid, cv.dataset.shiny === '1', cv.dataset.sil === '1'), 0, 0, cv.width, cv.height);
+  });
+}
+function typeBadge(t) { return '<span class="tbadge" style="background:' + TYPE_COLOR[t] + '">' + TYPE_ICON[t] + ' ' + t + '</span>'; }
+function rarBadge(r) { return '<span class="rbadge ' + RARITY[r].cls + '">' + RARITY[r].name + '</span>'; }
+function statusBadge(s) { return '<span class="sbadge" style="background:' + STATUS[s].color + '">' + STATUS[s].name + '</span>'; }
+function dexNo(sid) { return 'No. ' + fmt(sid + 1); }
+
+// ---------------- panels ----------------
+function openPanel(title, html, after) {
+  $('panelTitle').textContent = title;
+  const b = $('panelBody');
+  b.innerHTML = html;
+  b.scrollTop = 0;
+  $('panelWrap').classList.remove('hidden');
+  if (mode === 'world') mode = 'panel';
+  paintSprites(b);
+  if (after) after(b);
+}
+function closePanel() {
+  mapOpen = false; mapJob++;
+  $('panelWrap').classList.add('hidden');
+  if (mode === 'panel') mode = 'world';
+  updateHUD();
+  saveGame();
+}
+$('panelClose').onclick = closePanel;
+$('panelWrap').addEventListener('mousedown', e => { if (e.target === $('panelWrap')) closePanel(); });
+document.querySelectorAll('[data-open]').forEach(b => b.onclick = () => {
+  if (mode !== 'world') return;
+  ({ team: openTeam, dex: openDex, box: openBox, bag: openBag, help: openHelp, cloud: cloudSave, map: openMap })[b.dataset.open]();
+});
+
+function creatureCard(c, actions) {
+  const sp = getSpecies(c.sid), mh = maxHp(c), pct = c.hp / mh * 100;
+  return '<div class="ccard ' + RARITY[sp.rarity].cls + '">' + sprHTML(c.sid, c.shiny, 72) + '<div class="cc-main"><div class="cc-name">' + (c.shiny ? '<span title="Shiny!">✨</span>' : '') + esc(sp.name) + ' <span class="lv">Lv ' + c.lvl + '</span></div>' +
+    '<div class="cc-tags">' + formBadge(sp) + sp.types.map(typeBadge).join('') + rarBadge(sp.rarity) + traitChip(sp.trait, true) + '</div>' +
+    '<div class="hpbar sm"><div class="hpfill ' + hpCls(pct) + '" style="width:' + pct + '%"></div></div>' +
+    '<div class="cc-hp">' + c.hp + '/' + mh + ' HP' + (c.hp <= 0 ? ' — <b class="bad">Fainted</b>' : '') + '</div><div class="cc-actions">' + actions + '</div></div></div>';
+}
+function openTeam() {
+  const cards = S.team.map((c, i) => creatureCard(c,
+    '<button class="btn sm" data-act="info" data-i="' + i + '">Info</button>' +
+    (i > 0 ? '<button class="btn sm alt" data-act="lead" data-i="' + i + '">Make Lead</button>' : '<span class="muted" style="font-size:12px;align-self:center">⭐ Lead</span>') +
+    (S.team.length > 1 ? '<button class="btn ghost sm" data-act="tobox" data-i="' + i + '">To Box</button>' : ''))).join('');
+  openPanel('🐾 Your Team (' + S.team.length + '/6)', '<p class="muted">Your lead (first creature) battles first. Extra catches go to the Box.</p><div class="cards">' + cards + '</div>', b => {
+    b.querySelectorAll('[data-act]').forEach(btn => btn.onclick = () => {
+      const i = +btn.dataset.i, a = btn.dataset.act;
+      if (a === 'info') showCreatureDetail(S.team[i], 'team');
+      else if (a === 'lead') { const [c] = S.team.splice(i, 1); S.team.unshift(c); openTeam(); }
+      else if (a === 'tobox') { const [c] = S.team.splice(i, 1); S.box.unshift(c); toast(cname(c) + ' was sent to the Box.'); openTeam(); }
+    });
+  });
+}
+function evoLineHTML(fam, curSid) {
+  let h = '<div class="evoline">';
+  for (let k = 0; k < STAGES; k++) {
+    const sid = fam * STAGES + k, sp = getSpecies(sid), known = S.seen[sid] || S.caught[sid];
+    if (k > 0) h += '<div class="arrow">➜<br>Lv ' + getSpecies(sid - 1).evoLvl + '</div>';
+    h += '<div class="evo" style="' + (sid === curSid ? 'color:var(--accent)' : '') + '">' + sprHTML(sid, false, 64, !known) + (known ? esc(sp.name) : '???') + '</div>';
+  }
+  return h + '</div>';
+}
+function attacksTableHTML(sp) {
+  return '<table class="learn">' + sp.attacks.map((m, i) => {
+    const need = UNLOCK_AT[i], ok = i < sp.unlocked;
+    return '<tr class="' + (ok ? 'known' : 'future') + '"><td>' + (ok ? '🔓' : '🔒 Form ' + (need + 1)) + '</td><td><b>' + esc(m.name) + '</b> ' + stars(m.stars) + '</td><td>' + typeBadge(m.type) + '</td><td>' + moveDesc(m) + '</td></tr>';
+  }).join('') + '</table>';
+}
+function attacksEquipHTML(c, swapFor) {
+  const sp = getSpecies(c.sid);
+  return '<div class="atk-list">' + sp.attacks.map((m, i) => {
+    const unlocked = i < sp.unlocked, eq = c.moves.includes(i);
+    let btn;
+    if (!unlocked) btn = '<span class="lock">🔒 Unlocks at ' + (UNLOCK_AT[i] === 1 ? 'evolution 1' : 'evolution 2') + ' (Lv ' + sp.evoLvls[UNLOCK_AT[i] - 1] + ')</span>';
+    else if (swapFor != null) btn = eq ? '<button class="btn sm" data-swap="' + i + '">⇄ Replace</button>' : i === swapFor ? '<span class="cnt">Pick one to replace →</span> <button class="btn ghost sm" data-cancel="1">Cancel</button>' : '';
+    else if (eq) btn = '<span class="eqd">✔ Equipped</span>' + (c.moves.length > 1 ? ' <button class="btn ghost sm" data-unequip="' + i + '">Unequip</button>' : '');
+    else btn = '<button class="btn sm' + (c.moves.length >= 3 ? ' alt' : '') + '" data-equip="' + i + '">' + (c.moves.length >= 3 ? '⇄ Swap in' : '＋ Equip') + '</button>';
+    return '<div class="atk' + (eq ? ' eq' : '') + (unlocked ? '' : ' locked') + (i === swapFor ? ' picking' : '') + '" style="border-left-color:' + TYPE_COLOR[m.type] + '"><div class="atk-info"><b>' + (unlocked ? esc(m.name) : '???') + '</b> ' + (unlocked ? stars(m.stars) : '') + ' ' + typeBadge(m.type) +
+      '<div class="muted">' + (unlocked ? moveDesc(m) : 'A secret attack — evolve to unlock it!') + '</div></div><div class="atk-btn">' + btn + '</div></div>';
+  }).join('') + '</div>';
+}
+function statsHTML(sp, c) {
+  const rows = [['hp', 'HP'], ['atk', 'Attack'], ['def', 'Defense'], ['spd', 'Speed']];
+  return rows.map(([k, l]) => '<div class="stat"><span>' + l + '</span><div class="sbar"><div style="width:' + Math.min(100, sp.base[k] / 1.6) + '%"></div></div><b>' + (c ? (k === 'hp' ? maxHp(c) : stat(c, k)) : sp.base[k]) + '</b></div>').join('');
+}
+function showCreatureDetail(c, from, swapFor) {
+  const sp = getSpecies(c.sid), mh = maxHp(c);
+  let actions = '';
+  if (from === 'team') actions = '<button class="btn ghost" id="dBack">◀ Back to Team</button>';
+  else {
+    actions = '<button class="btn" id="dAdd" ' + (S.team.length >= 6 ? 'disabled' : '') + '>➕ Add to Team</button> <button class="btn ghost" id="dRel">Release</button> <button class="btn ghost" id="dBack">◀ Back to Box</button>';
+    if (S.team.length >= 6) actions += '<p class="muted">Your team is full — send someone to the Box first.</p>';
+  }
+  const evoTxt = sp.evoLvl ? (c.lvl >= sp.evoLvl ? 'Ready to evolve after its next battle win!' : 'Next evolution at Lv ' + sp.evoLvl) : '⭐ MAX form — fully evolved!';
+  const scroll = $('panelBody').scrollTop;
+  const html = '<div class="detail"><div style="text-align:center">' + sprHTML(c.sid, c.shiny, 200, false, 'bigspr') + '<div class="muted">' + dexNo(c.sid) + '</div>' + (c.shiny ? '<div style="color:var(--accent);font-weight:900">✨ SHINY ✨</div>' : '') + '</div><div>' +
+    '<h3>' + esc(sp.name) + ' <span class="lv">Lv ' + c.lvl + '</span></h3><div class="cc-tags">' + formBadge(sp) + sp.types.map(typeBadge).join('') + rarBadge(sp.rarity) + '</div>' +
+    (sp.trait ? '<div class="trait-line">' + traitChip(sp.trait) + ' <span class="muted">' + TRAITS[sp.trait].desc + '</span></div>' : '<div class="trait-line muted">No trait yet — it gets one when it evolves.</div>') +
+    '<div class="hpbar"><div class="hpfill ' + hpCls(c.hp / mh * 100) + '" style="width:' + (c.hp / mh * 100) + '%"></div></div><div class="cc-hp">' + c.hp + '/' + mh + ' HP · XP ' + c.xp + '/' + xpNeed(c.lvl) + ' · ' + evoTxt + '</div>' +
+    statsHTML(sp, c) + '<h4>Attacks <span class="muted" style="font-weight:600">— equip up to 3 (' + c.moves.length + '/3 equipped)</span></h4>' + attacksEquipHTML(c, swapFor) +
+    '<h4>Evolution line</h4>' + evoLineHTML(sp.fam, c.sid) + '<div style="margin-top:12px">' + actions + '</div></div></div>';
+  openPanel(sp.name, html, b => {
+    if (swapFor !== undefined || b.dataset.for === String(c.uid)) b.scrollTop = scroll;
+    b.dataset.for = c.uid;
+    b.querySelectorAll('[data-equip]').forEach(x => x.onclick = () => {
+      const i = +x.dataset.equip;
+      if (c.moves.length < 3) { c.moves.push(i); c.moves.sort((a, z) => a - z); showCreatureDetail(c, from); }
+      else showCreatureDetail(c, from, i);
+    });
+    b.querySelectorAll('[data-unequip]').forEach(x => x.onclick = () => { c.moves = c.moves.filter(m => m !== +x.dataset.unequip); showCreatureDetail(c, from); });
+    b.querySelectorAll('[data-swap]').forEach(x => x.onclick = () => { c.moves[c.moves.indexOf(+x.dataset.swap)] = swapFor; toast(cname(c) + ' equipped ' + sp.attacks[swapFor].name + '!'); showCreatureDetail(c, from); });
+    b.querySelectorAll('[data-cancel]').forEach(x => x.onclick = () => showCreatureDetail(c, from));
+    $('dBack').onclick = from === 'team' ? openTeam : () => openBox();
+    if ($('dAdd')) $('dAdd').onclick = () => { const i = S.box.indexOf(c); if (i >= 0 && S.team.length < 6) { S.box.splice(i, 1); S.team.push(c); toast(cname(c) + ' joined your team!'); updateHUD(); openBox(); } };
+    if ($('dRel')) $('dRel').onclick = () => { if (confirm('Release ' + cname(c) + ' into the wild? This cannot be undone.')) { const i = S.box.indexOf(c); if (i >= 0) S.box.splice(i, 1); toast('Bye bye, ' + cname(c) + '!'); openBox(); } };
+  });
+}
+function pagerHTML(page, pages) {
+  if (pages <= 1) return '';
+  return '<div class="pager"><button class="btn ghost sm" data-pg="' + (page - 1) + '" ' + (page <= 0 ? 'disabled' : '') + '>◀ Prev</button><span>Page ' + (page + 1) + ' / ' + pages + '</span><button class="btn ghost sm" data-pg="' + (page + 1) + '" ' + (page >= pages - 1 ? 'disabled' : '') + '>Next ▶</button></div>';
+}
+function bindPager(b, fn) { b.querySelectorAll('[data-pg]').forEach(x => x.onclick = () => fn(+x.dataset.pg)); }
+let boxPage = 0;
+const SELL_MULT = [1, 1.5, 2.5, 4, 8];
+function sellPrice(c) { return Math.round((10 + c.lvl * 2) * SELL_MULT[getSpecies(c.sid).rarity]); }
+function ivSum(c) { return c.iv[0] + c.iv[1] + c.iv[2] + c.iv[3]; }
+// Duplicates = extra copies of the same species. Never sold: team members, shinies, and the best copy you own.
+function findDuplicates() {
+  const bySid = new Map();
+  for (const c of S.team.concat(S.box)) { if (!bySid.has(c.sid)) bySid.set(c.sid, []); bySid.get(c.sid).push(c); }
+  const sell = [];
+  for (const list of bySid.values()) {
+    if (list.length < 2) continue;
+    let keep = list.find(c => S.team.includes(c));
+    if (!keep) keep = list.slice().sort((a, b) => b.lvl - a.lvl || ivSum(b) - ivSum(a))[0];
+    for (const c of list) if (c !== keep && !c.shiny && !S.team.includes(c)) sell.push(c);
+  }
+  return sell;
+}
+function copiesMap() { const m = new Map(); for (const c of S.team.concat(S.box)) m.set(c.sid, (m.get(c.sid) || 0) + 1); return m; }
+function openBox(page) {
+  if (page != null) boxPage = page;
+  const per = 30, pages = Math.max(1, Math.ceil(S.box.length / per));
+  boxPage = clamp(boxPage, 0, pages - 1);
+  const slice = S.box.slice(boxPage * per, boxPage * per + per);
+  const copies = copiesMap(), dupes = findDuplicates();
+  const grid = slice.map((c, j) => {
+    const sp = getSpecies(c.sid), n = copies.get(c.sid);
+    return '<button class="mini ' + RARITY[sp.rarity].cls + '" data-i="' + (boxPage * per + j) + '">' + (n > 1 ? '<em class="dupe" title="You own ' + n + ' of these">×' + n + '</em>' : '') + sprHTML(c.sid, c.shiny, 56) + '<span>' + (c.shiny ? '✨' : '') + esc(sp.name) + '</span><small>Lv ' + c.lvl + ' · ' + sp.types.map(t => TYPE_ICON[t]).join('') + '</small></button>';
+  }).join('');
+  const total = dupes.reduce((a, c) => a + sellPrice(c), 0);
+  const bar = '<div class="box-bar"><span class="muted">' + fmt(S.box.length) + ' creature(s) stored · Team ' + S.team.length + '/6 · Click a creature to add it to your team.</span>' +
+    '<button class="btn" id="sellDupes" ' + (dupes.length ? '' : 'disabled') + '>💰 Sell all duplicates' + (dupes.length ? ' (' + dupes.length + ' · ' + fmt(total) + ' coins)' : '') + '</button></div>';
+  openPanel('📦 Storage Box', bar +
+    (grid ? '<div class="minis">' + grid + '</div>' : '<p>Empty! When your team is full, new catches are sent here.</p>') + pagerHTML(boxPage, pages), b => {
+      b.querySelectorAll('.mini').forEach(m => m.onclick = () => showCreatureDetail(S.box[+m.dataset.i], 'box'));
+      bindPager(b, p => openBox(p));
+      $('sellDupes').onclick = confirmSellDupes;
+    });
+}
+function confirmSellDupes() {
+  const dupes = findDuplicates();
+  if (!dupes.length) return openBox();
+  const total = dupes.reduce((a, c) => a + sellPrice(c), 0);
+  const grid = dupes.map(c => { const sp = getSpecies(c.sid); return '<div class="mini ' + RARITY[sp.rarity].cls + '">' + sprHTML(c.sid, false, 56) + '<span>' + esc(sp.name) + '</span><small>Lv ' + c.lvl + ' · <b class="cnt">' + fmt(sellPrice(c)) + '💰</b></small></div>'; }).join('');
+  openPanel('💰 Sell all duplicates?', '<div class="sell-box"><p>These <b>' + dupes.length + '</b> extra copies will be sold for <b class="cnt">' + fmt(total) + ' coins</b>.</p>' +
+    '<p class="muted">Always kept: your team, every ✨ shiny, and your best copy of each creature (highest level, then best stats). Your Creaturedex is not affected.</p>' +
+    '<div class="sell-btns"><button class="btn" id="sellYes">💰 Sell ' + dupes.length + ' for ' + fmt(total) + ' coins</button><button class="btn ghost" id="sellNo">Cancel</button></div></div><div class="minis">' + grid + '</div>', () => {
+      $('sellNo').onclick = () => openBox();
+      $('sellYes').onclick = () => {
+        const set = new Set(dupes);
+        S.box = S.box.filter(c => !set.has(c));
+        S.coins += total;
+        saveGame();
+        updateHUD();
+        toast('Sold ' + dupes.length + ' duplicates for ' + fmt(total) + ' coins! 💰');
+        openBox();
+      };
+    });
+}
+let dexPage = 0, dexTab = 'caught';
+function openDex(page) {
+  if (page != null) dexPage = page;
+  const src = dexTab === 'caught' ? S.caught : S.seen;
+  const ids = Object.keys(src).map(Number).sort((a, b) => a - b);
+  const per = 36, pages = Math.max(1, Math.ceil(ids.length / per));
+  dexPage = clamp(dexPage, 0, pages - 1);
+  const nc = countKeys(S.caught), ns = countKeys(S.seen);
+  const grid = ids.slice(dexPage * per, dexPage * per + per).map(sid => {
+    const sp = getSpecies(sid);
+    return '<button class="mini ' + RARITY[sp.rarity].cls + '" data-sid="' + sid + '">' + sprHTML(sid, false, 56) + '<span>' + esc(sp.name) + '</span><small>' + dexNo(sid) + (S.caught[sid] ? ' · ✔' : '') + '</small></button>';
+  }).join('');
+  const html = '<div class="dexhead"><div><div class="big">' + fmt(nc) + '</div>caught</div><div><div class="big">' + fmt(ns) + '</div>seen</div><div><div class="big">' + fmt(TOTAL_SPECIES) + '</div>species exist</div><div class="muted">You have discovered ' + (nc / TOTAL_SPECIES * 100).toFixed(5) + '% of all creatures.<br>Each family has 4 forms (3 evolutions).</div></div>' +
+    '<div class="dexctl"><input id="dexNum" type="number" min="1" max="' + TOTAL_SPECIES + '" placeholder="Look up No. 1 – ' + fmt(TOTAL_SPECIES) + '"><button class="btn sm" id="dexGo">🔍 Look up</button><button class="btn alt sm" id="dexRand">🎲 Random species</button>' +
+    '<span class="tabs"><button class="btn ghost sm ' + (dexTab === 'caught' ? 'on' : '') + '" data-tab="caught">Caught</button><button class="btn ghost sm ' + (dexTab === 'seen' ? 'on' : '') + '" data-tab="seen">Seen</button></span></div>' +
+    (grid ? '<div class="minis">' + grid + '</div>' : '<p class="muted">Nothing here yet. Go explore!</p>') + pagerHTML(dexPage, pages);
+  openPanel('📖 Creaturedex', html, b => {
+    b.querySelectorAll('.mini').forEach(m => m.onclick = () => showSpecies(+m.dataset.sid));
+    b.querySelectorAll('[data-tab]').forEach(x => x.onclick = () => { dexTab = x.dataset.tab; dexPage = 0; openDex(); });
+    bindPager(b, p => openDex(p));
+    const go = () => { const n = parseInt($('dexNum').value, 10); if (n >= 1 && n <= TOTAL_SPECIES) showSpecies(n - 1); else toast('Enter a number from 1 to ' + fmt(TOTAL_SPECIES)); };
+    $('dexGo').onclick = go;
+    $('dexNum').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+    $('dexRand').onclick = () => showSpecies(Math.floor(rnd() * TOTAL_SPECIES));
+  });
+}
+function showSpecies(sid) {
+  const sp = getSpecies(sid), known = S.seen[sid] || S.caught[sid];
+  let body;
+  if (!known) {
+    const homes = Object.values(BIOMES).filter(b => b.types.includes(sp.famT1)).map(b => b.name).join(', ');
+    body = '<h3>??? <span class="muted">' + dexNo(sid) + '</span></h3><p>You haven\'t met this creature yet.</p><p class="muted">Hint: its family is ' + typeBadge(sp.famT1) + ' type. Look in: <b>' + homes + '</b>. Rarity: ' + rarBadge(sp.rarity) + '</p>' +
+      '<p class="muted">Tip: random wild creatures can be any family of the biome\'s types, so every one of the ' + fmt(TOTAL_SPECIES) + ' species can be found somewhere!</p>' + evoLineHTML(sp.fam, sid);
+  } else {
+    body = '<h3>' + esc(sp.name) + ' <span class="muted">' + dexNo(sid) + '</span></h3><div class="cc-tags">' + formBadge(sp) + sp.types.map(typeBadge).join('') + rarBadge(sp.rarity) + (S.caught[sid] ? ' <b class="good">✔ Caught</b>' : ' <span class="muted">Seen</span>') + '</div>' +
+      (sp.trait ? '<div class="trait-line">' + traitChip(sp.trait) + ' <span class="muted">' + TRAITS[sp.trait].desc + '</span></div>' : '') +
+      '<p class="muted">Base stats (total ' + sp.bst + ')' + (sp.evoLvl ? ' · evolves at Lv ' + sp.evoLvl : ' · MAX form') + '</p>' + statsHTML(sp, null) + '<h4>Evolution line</h4>' + evoLineHTML(sp.fam, sid) + '<h4>Attacks (equip 3)</h4>' + attacksTableHTML(sp);
+  }
+  openPanel('📖 ' + (known ? sp.name : '???'), '<div class="detail"><div style="text-align:center">' + sprHTML(sid, false, 200, !known, 'bigspr') + '</div><div>' + body + '<div style="margin-top:12px"><button class="btn ghost" id="spBack">◀ Back to Dex</button></div></div></div>', () => {
+    $('spBack').onclick = () => openDex();
+  });
+}
+function canUse(item, c) {
+  if (item === 'revive') return c.hp <= 0;
+  if (c.hp <= 0) return false;
+  return c.hp < maxHp(c) || (item === 'superp' && !!c.status);
+}
+function applyItem(item, c) {
+  S.items[item]--;
+  const mh = maxHp(c), n = cname(c);
+  if (item === 'potion') { const h = Math.min(mh - c.hp, Math.ceil(mh / 2)); c.hp += h; return n + ' recovered ' + h + ' HP!'; }
+  if (item === 'superp') { c.hp = mh; c.status = null; return n + ' was fully restored!'; }
+  c.hp = Math.ceil(mh / 2); return n + ' was revived!';
+}
+function itemRows(keys, btnFn) {
+  return keys.map(k => { const it = ITEMS[k]; return '<div class="item"><span class="ii">' + it.icon + '</span><div><b>' + it.name + '</b> <span class="cnt">×' + (S.items[k] || 0) + '</span><div class="muted">' + it.desc + '</div></div>' + btnFn(k) + '</div>'; }).join('');
+}
+function openBag() {
+  openPanel('🎒 Bag', '<p>💰 <b>' + fmt(S.coins) + '</b> coins</p><div class="items">' + itemRows(Object.keys(ITEMS), k => MEDS.includes(k) ? '<button class="btn sm" data-use="' + k + '" ' + (S.items[k] ? '' : 'disabled') + '>Use</button>' : '') + '</div><p class="muted">Orbs are thrown during wild battles. Buy more at Healing Shrines.</p>', b => {
+    b.querySelectorAll('[data-use]').forEach(x => x.onclick = () => chooseTargetPanel(x.dataset.use));
+  });
+}
+function chooseTargetPanel(item) {
+  const html = '<p>Use <b>' + ITEMS[item].name + '</b> on which creature?</p><div class="cards">' + S.team.map((c, i) => creatureCard(c, '<button class="btn sm" data-t="' + i + '" ' + (canUse(item, c) ? '' : 'disabled') + '>Use here</button>')).join('') + '</div><p><button class="btn ghost" id="bagBack">◀ Back</button></p>';
+  openPanel('🎒 Bag', html, b => {
+    b.querySelectorAll('[data-t]').forEach(x => x.onclick = () => { toast(applyItem(item, S.team[+x.dataset.t])); updateHUD(); openBag(); });
+    $('bagBack').onclick = openBag;
+  });
+}
+function openShrine(msg) {
+  healAll();
+  S.respawn = { x: P.x, y: P.y };
+  updateHUD();
+  const keys = ORBS.concat(MEDS);
+  const html = '<p class="good"><b>' + (msg || '✨ The crystal glows... your team is fully healed! This shrine is now your respawn point.') + '</b></p><p>💰 <b>' + fmt(S.coins) + '</b> coins</p><div class="items">' +
+    itemRows(keys, k => '<button class="btn sm" data-buy="' + k + '" data-q="1" ' + (S.coins < ITEMS[k].price ? 'disabled' : '') + '>Buy 1 · ' + ITEMS[k].price + '💰</button><button class="btn sm alt" data-buy="' + k + '" data-q="5" ' + (S.coins < ITEMS[k].price * 5 ? 'disabled' : '') + '>Buy 5</button>') + '</div>';
+  openPanel('⛩️ Healing Shrine', html, b => {
+    b.querySelectorAll('[data-buy]').forEach(x => x.onclick = () => {
+      const k = x.dataset.buy, q = +x.dataset.q, cost = ITEMS[k].price * q;
+      if (S.coins < cost) return;
+      S.coins -= cost; S.items[k] = (S.items[k] || 0) + q;
+      openShrine('Bought ' + q + ' × ' + ITEMS[k].name + '!');
+    });
+  });
+}
+function typeChartHTML(hl) {
+  hl = hl || [];
+  let h = '<table class="tchart"><tr><th>ATK ↓ / DEF →</th>' + TYPES.map(t => '<th title="' + t + '" class="' + (hl.includes(t) ? 'hl' : '') + '">' + TYPE_ICON[t] + '<br><small>' + t + '</small></th>').join('') + '</tr>';
+  for (const a of TYPES) {
+    h += '<tr><th style="text-align:left">' + TYPE_ICON[a] + ' ' + a + '</th>' + TYPES.map(d => { const m = typeMult(a, [d]), c = hl.includes(d) ? ' hl' : ''; return m > 1 ? '<td class="s' + c + '">×2</td>' : m < 1 ? '<td class="w' + c + '">½</td>' : '<td class="' + c + '"></td>'; }).join('') + '</tr>';
+  }
+  return h + '</table>';
+}
+function openHelp() {
+  openPanel('❓ How to Play', '<div class="howto" style="max-width:none">' + $('howtoBody').innerHTML + '</div><h4>Type chart</h4><p class="muted">Green = super effective (×2), red = not very effective (½). Using a move that matches your creature\'s own type gives a ×1.25 bonus.</p>' + typeChartHTML() +
+    '<p style="margin-top:14px"><button class="btn alt sm" id="hCloud">☁️ Cloud save settings</button> <button class="btn ghost sm" id="hNew">Start a brand-new world…</button></p>', () => {
+      if ($('hCloud')) $('hCloud').onclick = () => { closePanel(); openCloud(); };
+      $('hNew').onclick = () => { if (confirm('Start over in a new world? Your current save will be erased.')) { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } location.reload(); } };
+    });
+}
+
+// ---------------- trainers ----------------
+const TR_TITLES = ['Ace', 'Hiker', 'Ranger', 'Mystic', 'Scientist', 'Ninja', 'Camper', 'Sage', 'Biker', 'Explorer', 'Swimmer', 'Collector', 'Knight', 'Pilot'];
+const TR_NAMES = ['Mia', 'Leo', 'Zara', 'Kai', 'Ivy', 'Max', 'Nova', 'Finn', 'Ruby', 'Jin', 'Luna', 'Omar', 'Pia', 'Theo', 'Yuki', 'Sam', 'Ada', 'Rex', 'Lin', 'Bo', 'Wen', 'Ravi', 'Eli', 'Juno'];
+function bumpTrainer(tr) {
+  const key = tr.x + ',' + tr.y;
+  if (S.beaten[key]) {
+    if (!tr.lastTalk || performance.now() - tr.lastTalk > 1500) { tr.lastTalk = performance.now(); toast('"' + pickR(['Good battle!', 'Your team is strong!', 'Keep exploring!', 'I need to train more...'], mulberry32(tr.h)) + '"'); }
+    return;
+  }
+  if (mode !== 'world') return;
+  mode = 'busy';
+  tr.alert = performance.now();
+  setTimeout(() => startTrainer(tr), 650);
+}
+function makeTrainerTeam(tr) {
+  const r = mulberry32(tr.h);
+  const name = pickR(TR_TITLES, r) + ' ' + pickR(TR_NAMES, r);
+  const base = wildBase(tr.x, tr.y);
+  const n = clamp(1 + Math.floor(base / 14) + (r() < 0.5 ? 1 : 0), 1, 6);
+  const bk = REGION_BIOME[TI[tileAt(tr.x, tr.y)].region];
+  const foes = [];
+  for (let i = 0; i < n; i++) {
+    const type = r() < 0.6 ? pickR(BIOMES[bk].types, r) : pickR(TYPES, r);
+    const fam = famOfType(type, r);
+    const lvl = clamp(base + 1 + Math.floor(r() * 3), 2, 100);
+    foes.push(makeCreature(fam * STAGES + stageFor(fam, lvl, r), lvl, false));
+  }
+  return { name, foes, bk };
+}
+
+// ---------------- battle ----------------
+let sayResolve = null;
+function say(text, ms) {
+  return new Promise(res => {
+    $('bMsg').textContent = text;
+    let done = false;
+    const fin = () => { if (done) return; done = true; clearTimeout(tm); sayResolve = null; res(); };
+    const tm = setTimeout(fin, ms || clamp(650 + text.length * 22, 900, 2300));
+    sayResolve = fin;
+  });
+}
+$('bMsg').addEventListener('click', () => { if (sayResolve) sayResolve(); });
+function active() { return S.team[battle.pi]; }
+function curFoe() { return battle.foes[battle.fi]; }
+function label(c, isMe) { return isMe ? cname(c) : (battle.kind === 'wild' ? 'The wild ' : 'The foe ') + cname(c); }
+function freshBattleState(c) { c.bs = { atk: 0, def: 0, spd: 0 }; }
+function anim(id, cls) { const el = $(id); el.classList.remove('appear', 'lungeR', 'lungeL', 'hit', 'faint', 'sucked'); void el.offsetWidth; if (cls) el.classList.add(cls); }
+function infoHTML(c, isMe) {
+  const sp = getSpecies(c.sid), mh = maxHp(c), pct = c.hp / mh * 100;
+  return '<div class="bi-top"><span class="bi-name">' + (c.shiny ? '✨' : '') + esc(sp.name) + '</span><span class="bi-lv">Lv ' + c.lvl + '</span></div>' +
+    '<div class="bi-tags">' + formBadge(sp) + sp.types.map(typeBadge).join('') + rarBadge(sp.rarity) + (c.status ? statusBadge(c.status) : '') + traitChip(sp.trait, true) +
+    (!isMe && battle.kind === 'wild' && S.caught[c.sid] ? '<span class="caught-mark" title="Already caught">🔴 caught</span>' : '') + '</div>' +
+    '<div class="hpbar"><div class="hpfill ' + hpCls(pct) + '" style="width:' + pct + '%"></div></div>' +
+    (isMe ? '<div class="bi-hp">' + c.hp + ' / ' + mh + '</div><div class="xpbar"><div style="width:' + (c.xp / xpNeed(c.lvl) * 100) + '%"></div></div>' : '');
+}
+function renderSide(side, appear) {
+  const isMe = side === 'me', c = isMe ? active() : curFoe();
+  const cv = $(isMe ? 'meCv' : 'foeCv'), x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 192, 192);
+  x.drawImage(getSprite(c.sid, c.shiny, false), 0, 0, 192, 192);
+  cv.parentElement.parentElement.dataset.rar = getSpecies(c.sid).rarity; cv.parentElement.parentElement.dataset.form = getSpecies(c.sid).k;
+  $(isMe ? 'meInfo' : 'foeInfo').innerHTML = infoHTML(c, isMe);
+  if (appear) anim(isMe ? 'meSpr' : 'foeSpr', 'appear');
+  updateTypeInfo();
+}
+function updateBars() {
+  for (const side of ['me', 'foe']) {
+    const isMe = side === 'me', c = isMe ? active() : curFoe(), box = $(isMe ? 'meInfo' : 'foeInfo');
+    const mh = maxHp(c), pct = c.hp / mh * 100, f = box.querySelector('.hpfill');
+    if (f) { f.style.width = pct + '%'; f.className = 'hpfill ' + hpCls(pct); }
+    const t = box.querySelector('.bi-hp'); if (t) t.textContent = c.hp + ' / ' + mh;
+    const xb = box.querySelector('.xpbar div'); if (xb) xb.style.width = (c.xp / xpNeed(c.lvl) * 100) + '%';
+  }
+}
+function fx(side, type) {
+  const el = $(side === 'me' ? 'meFx' : 'foeFx');
+  el.style.background = 'radial-gradient(circle,' + (TYPE_COLOR[type] || '#fff') + ' 0%, rgba(255,255,255,0) 70%)';
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+function setActions(btns) {
+  const el = $('bActions');
+  el.innerHTML = '';
+  btns.forEach((b, i) => {
+    const e = document.createElement('button');
+    e.className = 'bbtn ' + (b.cls || '');
+    e.innerHTML = b.html + (i < 9 ? ' <kbd>' + (i + 1) + '</kbd>' : '');
+    if (b.color) e.style.borderLeftColor = b.color;
+    if (b.back) e.dataset.back = '1';
+    e.disabled = !!b.disabled;
+    if (b.soft) { e.classList.add('dis'); e.dataset.soft = '1'; }
+    e.onclick = () => { if (!e.disabled && !b.soft) b.on(); };
+    if (b.hover) { e.onmouseenter = b.hover; e.onfocus = b.hover; }
+    el.appendChild(e);
+  });
+  paintSprites(el);
+}
+async function startBattle(kind, foes, trainer, biome) {
+  $('panelWrap').classList.add('hidden');
+  mode = 'battle';
+  held.length = 0;
+  const pi = S.team.findIndex(c => c.hp > 0);
+  battle = { kind, foes, fi: 0, pi: pi < 0 ? 0 : pi, trainer, biome, part: new Set(), over: false, runs: 0 };
+  for (const c of S.team) freshBattleState(c);
+  for (const c of foes) freshBattleState(c);
+  battle.part.add(active().uid);
+  const b = BIOMES[biome] || BIOMES.meadow;
+  const el = $('battle');
+  el.style.setProperty('--sky', b.sky); el.style.setProperty('--ground', b.ground);
+  el.classList.remove('hidden');
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  setActions([]);
+  markSeen(curFoe().sid);
+  renderSide('foe', true);
+  renderSide('me', true);
+  const foe = curFoe(), sp = getSpecies(foe.sid);
+  if (kind === 'trainer') {
+    await say(trainer.name + ' wants to battle!');
+    await say(trainer.name + ' sent out ' + cname(foe) + '! (' + foes.length + ' creature' + (foes.length > 1 ? 's' : '') + ')');
+  } else {
+    let pre = '';
+    if (sp.rarity >= 3) pre = '✦ ' + RARITY[sp.rarity].name.toUpperCase() + ' ✦ ';
+    await say((foe.shiny ? '✨ Whoa, a SHINY! ✨ ' : '') + 'A wild ' + pre + cname(foe) + ' appeared!' + (S.caught[foe.sid] ? '' : ' (New species!)'));
+  }
+  await say('Go, ' + cname(active()) + '!', 900);
+  showMain();
+}
+function startWild(biome) {
+  const bk = biome, types = BIOMES[bk].types;
+  const zx = Math.floor(P.x / 32), zy = Math.floor(P.y / 32);
+  const zr = mulberry32(h32(WSEED, zx, zy, 900 + Object.keys(BIOMES).indexOf(bk)));
+  const pool = [];
+  for (let i = 0; i < 7; i++) pool.push(famOfType(pickR(types, zr), zr));
+  let fam;
+  if (rnd() < 0.68) {
+    const w = [30, 22, 16, 12, 9, 7, 4];
+    let x = rnd() * 100, i = 0;
+    while (i < 6 && x >= w[i]) { x -= w[i]; i++; }
+    fam = pool[i];
+  } else fam = famOfType(pickR(types), rnd);
+  if (famRarity(fam) === 4 && rnd() < 0.5) fam = famOfType(pickR(types), rnd); // legendaries are extra rare
+  const lvl = wildLevel(P.x, P.y);
+  const c = makeCreature(fam * STAGES + stageFor(fam, lvl), lvl, rnd() < 1 / 300);
+  startBattle('wild', [c], null, bk);
+}
+function startTrainer(tr) {
+  const t = makeTrainerTeam(tr);
+  t.key = tr.x + ',' + tr.y;
+  startBattle('trainer', t.foes, t, t.bk);
+}
+function showMain() {
+  if (!battle || battle.over) return;
+  $('bMsg').textContent = 'What will ' + cname(active()) + ' do?';
+  const wild = battle.kind === 'wild';
+  const orbs = ORBS.reduce((s, k) => s + (S.items[k] || 0), 0);
+  setActions([
+    { html: '⚔️ Fight', on: showFight, color: '#ff5d6c' },
+    { html: '🔴 Catch<small>' + (wild ? orbs + ' orbs' : "Can't catch trainers' creatures") + '</small>', on: showCatch, disabled: !wild || !orbs, color: '#ffcc4d' },
+    { html: '🎒 Bag', on: showBagB, color: '#6be3ff' },
+    { html: '🔄 Switch', on: () => chooseSwitch(false).then(i => i < 0 ? showMain() : act({ type: 'switch', idx: i })), color: '#5fe07a' },
+    wild ? { html: '🏃 Run', on: () => act({ type: 'run' }), color: '#9aa3c7' }
+      : { html: '💸 Pay Up<small>' + (S.coins >= payUpCost() ? 'Pay ' + fmt(payUpCost()) + ' coins to end the battle' : 'Need ' + fmt(payUpCost()) + ' coins (you have ' + fmt(S.coins) + ')') + '</small>', on: showPayUp, disabled: S.coins < payUpCost(), color: '#ff9f43' },
+  ]);
+}
+function payUpCost() { return Math.max(20, Math.round(battle.foes.reduce((s, c) => s + c.lvl, 0) * 12 * 0.5)); }
+function showPayUp() {
+  const cost = payUpCost();
+  $('bMsg').innerHTML = '💸 Pay <b>' + fmt(cost) + ' coins</b> to ' + esc(battle.trainer.name) + ' to end this battle?<br><small class="muted" style="font-size:14px">You keep your creatures, but get no XP or prize. You can challenge this trainer again later.</small>';
+  setActions([
+    { html: '💸 Yes, pay ' + fmt(cost) + '<small>You have ' + fmt(S.coins) + ' coins</small>', on: () => act({ type: 'payup' }), color: '#ff9f43' },
+    { html: '◀ No, keep fighting', on: showMain, back: true, cls: 'back' },
+  ]);
+}
+function showFight() {
+  const c = active(), foeTypes = getSpecies(curFoe().sid).types;
+  const btns = c.moves.map((mi, slot) => {
+    const m = getSpecies(c.sid).attacks[mi];
+    let hint = '';
+    if (m.kind === 'dmg' || m.kind === 'drain') { const tm = typeMult(m.type, foeTypes); hint = tm > 1 ? ' · 💥 ' + multTxt(tm) + ' super effective' : tm < 1 ? ' · ' + multTxt(tm) + ' not very effective' : ' · ×1'; }
+    return { html: TYPE_ICON[m.type] + ' ' + esc(m.name) + ' ' + stars(m.stars) + '<small>' + moveDesc(m) + hint + '</small>', color: TYPE_COLOR[m.type], on: () => act({ type: 'move', slot }) };
+  });
+  btns.push({ html: '◀ Back', on: showMain, back: true, cls: 'back' });
+  setActions(btns);
+}
+function showCatch() {
+  const btns = ORBS.map(k => ({ html: ITEMS[k].icon + ' ' + ITEMS[k].name + '<small>×' + (S.items[k] || 0) + (ITEMS[k].mult > 1 ? ' · ×' + ITEMS[k].mult + ' catch' : '') + '</small>', disabled: !S.items[k], on: () => act({ type: 'catch', orb: k }) }));
+  btns.push({ html: '◀ Back', on: showMain, back: true, cls: 'back' });
+  setActions(btns);
+  $('bMsg').textContent = 'Tip: weaken it first! Lower HP, status effects, and better orbs all raise the catch chance.';
+}
+function showBagB() {
+  const btns = MEDS.map(k => ({ html: ITEMS[k].icon + ' ' + ITEMS[k].name + '<small>×' + (S.items[k] || 0) + '</small>', disabled: !S.items[k] || !S.team.some(c => canUse(k, c)), on: () => chooseTarget(k) }));
+  btns.push({ html: '◀ Back', on: showMain, back: true, cls: 'back' });
+  setActions(btns);
+}
+function swCardHTML(c, tag) {
+  const sp = getSpecies(c.sid), mh = maxHp(c), pct = c.hp / mh * 100;
+  return '<span class="sw-row">' + sprHTML(c.sid, c.shiny, 40) + '<span class="sw-main"><span class="sw-name">' + (c.shiny ? '✨' : '') + esc(sp.name) + ' <span class="sw-lv">Lv ' + c.lvl + '</span></span>' +
+    '<span class="sw-sub">' + sp.types.map(t => TYPE_ICON[t]).join('') + ' · ' + (c.hp <= 0 ? '<b class="bad">Fainted</b>' : c.hp + '/' + mh + ' HP') + (c.status ? ' ' + statusBadge(c.status) : '') + (tag ? ' · <b class="sw-tag">' + tag + '</b>' : '') + '</span>' +
+    '<span class="hpbar sm"><span class="hpfill ' + hpCls(pct) + '" style="width:' + pct + '%"></span></span></span></span>';
+}
+function switchPreviewHTML(c, title, isCur) {
+  const sp = getSpecies(c.sid), mh = maxHp(c), pct = c.hp / mh * 100;
+  const foe = curFoe(), fsp = getSpecies(foe.sid), ft = fsp.types;
+  const team = S.team.concat([foe]);
+  const statRow = (k, l) => {
+    const v = k === 'hp' ? mh : stat(c, k), top = Math.max.apply(null, team.map(x => k === 'hp' ? maxHp(x) : stat(x, k)));
+    return '<div class="swp-stat"><span>' + l + '</span><span class="sbar"><span style="width:' + Math.round(v / top * 100) + '%"></span></span><b>' + v + '</b></div>';
+  };
+  let best = 0;
+  const moves = c.moves.map(i => sp.attacks[i]).map(m => {
+    if (m.kind === 'dmg' || m.kind === 'drain') {
+      const x = typeMult(m.type, ft); best = Math.max(best, x);
+      return '<li class="' + (x > 1 ? 'up' : x < 1 ? 'down' : '') + '"><span>' + TYPE_ICON[m.type] + ' ' + esc(m.name) + ' <small>' + m.power + '</small></span><b>' + multTxt(x) + '</b></li>';
+    }
+    return '<li><span>' + TYPE_ICON[m.type] + ' ' + esc(m.name) + '</span><span class="muted">' + (m.kind === 'heal' ? 'heal' : m.kind === 'buff' ? STATN[m.stat] + ' ▲' : STATN[m.stat] + ' ▼') + '</span></li>';
+  }).join('');
+  const danger = ft.filter(t => typeMult(t, sp.types) > 1), resist = ft.filter(t => typeMult(t, sp.types) < 1);
+  const mySpd = stat(c, 'spd') * (c.status === 'para' ? 0.5 : 1), foeSpd = eff(foe, 'spd');
+  let verdict;
+  if (c.hp <= 0) verdict = '<span class="swv bad-bg">💤 Fainted — can\'t battle</span>';
+  else if (isCur) verdict = '<span class="swv">🎯 Already battling</span>';
+  else if (best > 1 && !danger.length) verdict = '<span class="swv good-bg">👍 Great pick!</span>';
+  else if (danger.length && best <= 1) verdict = '<span class="swv bad-bg">⚠️ Risky pick</span>';
+  else if (best > 1) verdict = '<span class="swv good-bg">💥 Strong attacks, but careful</span>';
+  else if (resist.length) verdict = '<span class="swv good-bg">🛡️ Good defender</span>';
+  else verdict = '<span class="swv">😐 Even match</span>';
+  return '<div class="sw-prev"><div class="swp-left">' + sprHTML(c.sid, c.shiny, 96) + verdict + '</div><div class="swp-main">' +
+    '<div class="swp-title">' + esc(title) + '</div>' +
+    '<div class="swp-name">' + (c.shiny ? '✨' : '') + esc(sp.name) + ' <span class="sw-lv">Lv ' + c.lvl + '</span> ' + sp.types.map(typeBadge).join(' ') + ' ' + rarBadge(sp.rarity) + (c.status ? ' ' + statusBadge(c.status) : '') + '</div>' +
+    '<div class="hpbar"><div class="hpfill ' + hpCls(pct) + '" style="width:' + pct + '%"></div></div><div class="swp-hp">' + (sp.trait ? '<span class="swp-trait">' + TRAITS[sp.trait].icon + ' ' + TRAITS[sp.trait].name + ': ' + TRAITS[sp.trait].desc + '</span>' : '') + c.hp + ' / ' + mh + ' HP</div>' +
+    '<div class="swp-cols"><div>' + statRow('hp', 'HP') + statRow('atk', 'Attack') + statRow('def', 'Defense') + statRow('spd', 'Speed') +
+    '<div class="swp-line">' + (mySpd > foeSpd ? '⚡ Faster than ' + esc(fsp.name) + ' — attacks first' : mySpd < foeSpd ? '🐢 Slower than ' + esc(fsp.name) + ' — attacks second' : '🤝 Same speed as ' + esc(fsp.name)) + '</div></div>' +
+    '<div><div class="swp-lbl">Moves vs ' + esc(fsp.name) + '</div><ul class="bt-moves">' + moves + '</ul>' +
+    (danger.length ? '<div class="swp-line bad-txt">⚠️ Weak to foe\'s ' + danger.map(t => TYPE_ICON[t] + ' ' + t).join(', ') + ' attacks (×2)</div>' : '') +
+    (resist.length ? '<div class="swp-line good-txt">🛡️ Resists foe\'s ' + resist.map(t => TYPE_ICON[t] + ' ' + t).join(', ') + ' attacks (×½)</div>' : '') +
+    '</div></div></div></div>';
+}
+function showSwitchPreview(c, title, isCur) {
+  const m = $('bMsg');
+  m.innerHTML = switchPreviewHTML(c, title, isCur);
+  paintSprites(m);
+}
+function chooseTarget(item) {
+  const btns = S.team.map((c, i) => ({ html: swCardHTML(c), cls: 'sw', disabled: !canUse(item, c), on: () => act({ type: 'item', item, idx: i }) }));
+  btns.push({ html: '◀ Back', on: showBagB, back: true, cls: 'back' });
+  setActions(btns);
+  $('bMsg').textContent = 'Use ' + ITEMS[item].name + ' on which creature?';
+}
+function chooseSwitch(forced) {
+  return new Promise(res => {
+    const title = forced ? 'Choose your next creature! (hover to compare)' : 'Switch to which creature? (hover to compare)';
+    const btns = S.team.map((c, i) => {
+      const cur = i === battle.pi && !forced;
+      return { html: swCardHTML(c, cur ? 'In battle' : ''), cls: 'sw' + (cur ? ' cur' : ''), soft: c.hp <= 0 || i === battle.pi, on: () => res(i), hover: () => showSwitchPreview(c, title, cur) };
+    });
+    if (!forced) btns.push({ html: '◀ Back', on: () => res(-1), back: true, cls: 'back' });
+    setActions(btns);
+    const first = S.team.find((c, i) => c.hp > 0 && i !== battle.pi) || active();
+    showSwitchPreview(first, title, first === active() && !forced);
+  });
+}
+function aiPick(foe, me) {
+  const sp = getSpecies(foe.sid), ms = foe.moves.map(i => sp.attacks[i]), myTypes = getSpecies(me.sid).types;
+  if (foe.hp < maxHp(foe) * 0.35) { const h = ms.find(m => m.kind === 'heal'); if (h && rnd() < 0.6) return h; }
+  if (rnd() < 0.25) return pickR(ms);
+  let best = ms[0], bv = -1;
+  for (const m of ms) {
+    let v;
+    if (m.kind === 'dmg' || m.kind === 'drain') v = m.power * m.acc / 100 * typeMult(m.type, myTypes) * (sp.types.includes(m.type) ? 1.25 : 1);
+    else v = m.kind === 'heal' ? 0 : 22;
+    if (v > bv) { bv = v; best = m; }
+  }
+  return best;
+}
+function calcDamage(a, d, mv) {
+  let dmg = ((2 * a.lvl / 5 + 2) * mv.power * eff(a, 'atk') / eff(d, 'def')) / 50 + 2;
+  if (getSpecies(a.sid).types.includes(mv.type)) dmg *= 1.25;
+  const tm = typeMult(mv.type, getSpecies(d.sid).types);
+  const ta = traitOf(a), td = traitOf(d);
+  const crit = rnd() < (ta === 'lucky' ? 3 : 1) / 16;
+  dmg *= tm * (crit ? 1.5 : 1) * (0.85 + rnd() * 0.15);
+  if (a.status === 'burn') dmg *= 0.8;
+  if (ta === 'fierce') dmg *= 1.15;
+  if (ta === 'attune' && getSpecies(a.sid).types.includes(mv.type)) dmg *= 1.2;
+  if (td === 'tough') dmg *= 0.85;
+  return { dmg: Math.max(1, Math.floor(dmg)), tm, crit };
+}
+async function useMove(a, d, mv, isMe) {
+  const an = label(a, isMe), dn = label(d, !isMe);
+  const aSpr = isMe ? 'meSpr' : 'foeSpr', dSpr = isMe ? 'foeSpr' : 'meSpr';
+  if (a.status === 'frz') {
+    if (rnd() < 0.5) { await say(an + ' is frozen solid!'); return; }
+    a.status = null; renderInfoOnly(); await say(an + ' thawed out!');
+  }
+  if (a.status === 'para' && rnd() < 0.25) { await say(an + " is paralyzed! It can't move!"); return; }
+  await say(an + ' used ' + mv.name + '!', 850);
+  if (mv.kind === 'dmg' || mv.kind === 'drain') {
+    if (rnd() * 100 >= mv.acc) { await say('But it missed!', 900); return; }
+    const r = calcDamage(a, d, mv);
+    anim(aSpr, isMe ? 'lungeR' : 'lungeL');
+    await wait(160);
+    fx(isMe ? 'foe' : 'me', mv.type);
+    anim(dSpr, 'hit');
+    d.hp = Math.max(0, d.hp - r.dmg);
+    updateBars();
+    await wait(480);
+    if (r.crit) await say('A critical hit!', 850);
+    if (r.tm > 1) await say("It's super effective!", 950);
+    else if (r.tm < 1) await say("It's not very effective...", 950);
+    if (traitOf(a) === 'vamp' && a.hp > 0 && a.hp < maxHp(a)) {
+      a.hp = Math.min(maxHp(a), a.hp + Math.max(1, Math.floor(r.dmg * 0.2)));
+      updateBars(); await say(an + ' stole some life! (🩸 Life Steal)', 900);
+    }
+    if (mv.kind === 'drain' && a.hp > 0) {
+      a.hp = Math.min(maxHp(a), a.hp + Math.max(1, Math.floor(r.dmg / 2)));
+      updateBars(); await say(an + ' drained some energy!', 900);
+    }
+    const sc = STATUS_BY_TYPE[mv.type];
+    if (sc && mv.kind === 'dmg' && d.hp > 0 && !d.status && traitOf(d) !== 'guard' && !getSpecies(d.sid).types.includes(mv.type) && rnd() < sc[1]) {
+      d.status = sc[0]; renderInfoOnly(); await say(dn + ' ' + STATUS[sc[0]].txt);
+    }
+  } else if (mv.kind === 'buff') {
+    fx(isMe ? 'me' : 'foe', 'Light');
+    if (a.bs[mv.stat] >= 4) await say(an + "'s " + STATN[mv.stat] + " won't go any higher!");
+    else { a.bs[mv.stat] = Math.min(4, a.bs[mv.stat] + mv.amt); await say(an + "'s " + STATN[mv.stat] + (mv.amt > 1 ? ' rose sharply!' : ' rose!')); }
+  } else if (mv.kind === 'debuff') {
+    fx(isMe ? 'foe' : 'me', 'Shadow');
+    if (d.bs[mv.stat] <= -4) await say(dn + "'s " + STATN[mv.stat] + " won't go any lower!");
+    else { d.bs[mv.stat]--; await say(dn + "'s " + STATN[mv.stat] + ' fell!'); }
+  } else if (mv.kind === 'heal') {
+    const mh = maxHp(a);
+    if (a.hp >= mh) await say(an + "'s HP is already full!");
+    else { fx(isMe ? 'me' : 'foe', 'Leaf'); a.hp = Math.min(mh, a.hp + Math.ceil(mh * 0.45)); updateBars(); await say(an + ' restored its HP!'); }
+  }
+}
+function renderInfoOnly() { $('meInfo').innerHTML = infoHTML(active(), true); $('foeInfo').innerHTML = infoHTML(curFoe(), false); updateTypeInfo(); }
+// ----- type matchup box -----
+let typeInfoOpen = true;
+try { typeInfoOpen = localStorage.getItem('cq_typeinfo') !== '0'; } catch (e) { }
+function multTxt(m) { return m >= 4 ? '×4' : m >= 2 ? '×2' : m <= 0.25 ? '×¼' : m < 1 ? '×½' : '×1'; }
+function tchip(t, m) { return '<span class="tchip" style="background:' + TYPE_COLOR[t] + '">' + TYPE_ICON[t] + ' ' + t + (m != null ? ' <b>' + multTxt(m) + '</b>' : '') + '</span>'; }
+function updateTypeInfo() {
+  const box = $('bTypes');
+  if (!box || !battle) return;
+  const me = active(), foe = curFoe();
+  const msp = getSpecies(me.sid), fsp = getSpecies(foe.sid), ft = fsp.types, mt = msp.types;
+  const good = [], bad = [];
+  for (const t of TYPES) { const m = typeMult(t, ft); if (m > 1) good.push([t, m]); else if (m < 1) bad.push([t, m]); }
+  good.sort((a, b) => b[1] - a[1]); bad.sort((a, b) => a[1] - b[1]);
+  const moves = me.moves.map(i => msp.attacks[i]).filter(m => m.kind === 'dmg' || m.kind === 'drain').map(m => {
+    const x = typeMult(m.type, ft), stab = mt.includes(m.type);
+    const note = x > 1 ? 'super effective!' : x < 1 ? 'not very effective' : 'normal damage';
+    return '<li class="' + (x > 1 ? 'up' : x < 1 ? 'down' : '') + '"><span>' + TYPE_ICON[m.type] + ' ' + esc(m.name) + (stab ? ' <i title="Same type as your creature: ×1.25 bonus">+STAB</i>' : '') + '</span><span><b>' + multTxt(x) + '</b> ' + note + '</span></li>';
+  }).join('');
+  const danger = ft.map(t => [t, typeMult(t, mt)]).filter(x => x[1] > 1);
+  const safe = ft.map(t => [t, typeMult(t, mt)]).filter(x => x[1] < 1);
+  let warn;
+  if (danger.length) warn = '<div class="bt-warn bad-bg">⚠️ ' + danger.map(d => tchip(d[0], d[1])).join('') + ' attacks are strong against your ' + esc(msp.name) + '. Think about switching!</div>';
+  else if (safe.length) warn = '<div class="bt-warn good-bg">🛡️ Your ' + esc(msp.name) + ' resists ' + safe.map(d => tchip(d[0], d[1])).join('') + ' attacks.</div>';
+  else warn = '<div class="bt-warn">😐 ' + esc(fsp.name) + "'s type attacks do normal damage to your " + esc(msp.name) + '.</div>';
+  box.classList.toggle('closed', !typeInfoOpen);
+  box.innerHTML = '<div class="bt-head"><span>📊 Type Matchups</span><span><button id="btChart" title="Full type chart (C)">Chart <kbd>C</kbd></button><button id="btToggle" title="Show/hide (Y)">' + (typeInfoOpen ? '−' : '+') + ' <kbd>Y</kbd></button></span></div>' +
+    '<div class="bt-body">' +
+    '<div class="bt-sec"><div class="bt-lbl">💥 Super effective against ' + esc(fsp.name) + ' (' + ft.map(t => TYPE_ICON[t] + ' ' + t).join(' / ') + ')</div>' + (good.length ? good.map(g => tchip(g[0], g[1])).join('') : '<span class="muted">Nothing — it has no weak spots!</span>') + '</div>' +
+    '<div class="bt-sec"><div class="bt-lbl">🧱 Weak against it (it resists)</div>' + (bad.length ? bad.map(g => tchip(g[0], g[1])).join('') : '<span class="muted">Nothing resisted</span>') + '</div>' +
+    '<div class="bt-sec"><div class="bt-lbl">⚔️ Your attacks</div>' + (moves ? '<ul class="bt-moves">' + moves + '</ul>' : '<span class="muted">No attacking moves</span>') + '</div>' +
+    '<div class="bt-sec">' + warn + '</div></div>';
+  $('btToggle').onclick = toggleTypeInfo;
+  $('btChart').onclick = openTypeChart;
+}
+function toggleTypeInfo() {
+  typeInfoOpen = !typeInfoOpen;
+  try { localStorage.setItem('cq_typeinfo', typeInfoOpen ? '1' : '0'); } catch (e) { }
+  updateTypeInfo();
+}
+function openTypeChart() {
+  if (!battle) return;
+  const ft = getSpecies(curFoe().sid).types;
+  openPanel('📊 Type Chart', '<p>Rows are the <b>attacking</b> type, columns are the <b>defending</b> type. Green = super effective (×2), red = not very effective (½). The foe\'s types are highlighted: ' + ft.map(t => tchip(t)).join('') + '</p><p class="muted">If a creature has two types, multiply both: e.g. ×2 and ×2 = ×4! A move that matches your creature\'s own type gets a ×1.25 bonus (STAB).</p>' + typeChartHTML(ft) + '<p style="margin-top:12px"><button class="btn" id="tcBack">◀ Back to battle <kbd>Esc</kbd></button></p>', () => { $('tcBack').onclick = closePanel; });
+}
+async function act(a) {
+  if (!battle || battle.over) return;
+  setActions([]);
+  const me = active(), foe = curFoe();
+  if (a.type === 'payup') {
+    const cost = payUpCost();
+    if (S.coins < cost) return showMain();
+    S.coins -= cost;
+    await say('You paid ' + battle.trainer.name + ' ' + fmt(cost) + ' coins.', 1100);
+    await say(battle.trainer.name + ': "' + pickR(['Pleasure doing business! Come back when you\'re stronger.', 'Smart choice! See you next time.', 'Ka-ching! Thanks for the coins!', 'Hmph. Fine, you can go.']) + '"', 1600);
+    return endBattle();
+  }
+  if (a.type === 'run') {
+    battle.runs++;
+    const p = clamp(0.5 + (eff(me, 'spd') - eff(foe, 'spd')) / (eff(foe, 'spd') * 2) + battle.runs * 0.15, 0.3, 1);
+    if (rnd() < p) { await say('Got away safely!', 900); return endBattle(); }
+    await say("Couldn't get away!", 900);
+    if (await foeAttack()) return finishTurn();
+  } else if (a.type === 'catch') {
+    if (await tryCatch(a.orb)) return endBattle();
+    if (await foeAttack()) return finishTurn();
+  } else if (a.type === 'item') {
+    await say(applyItem(a.item, S.team[a.idx]));
+    renderInfoOnly();
+    if (await foeAttack()) return finishTurn();
+  } else if (a.type === 'switch') {
+    await doSwitch(a.idx, false);
+    if (await foeAttack()) return finishTurn();
+  } else if (a.type === 'move') {
+    const mMove = moveOf(me, a.slot), fMove = aiPick(foe, me);
+    const s1 = eff(me, 'spd'), s2 = eff(foe, 'spd');
+    const meFirst = s1 > s2 || (s1 === s2 && rnd() < 0.5);
+    const order = meFirst ? [[me, foe, mMove, true], [foe, me, fMove, false]] : [[foe, me, fMove, false], [me, foe, mMove, true]];
+    for (const [x, y, mv, isMe] of order) {
+      if (!battle || battle.over) return;
+      if (x.hp <= 0 || y.hp <= 0) continue;
+      await useMove(x, y, mv, isMe);
+      if (await resolveFaints()) return finishTurn();
+    }
+  }
+  if (battle && !battle.over) await endOfTurn();
+  finishTurn();
+}
+function finishTurn() { if (battle && !battle.over) showMain(); }
+async function foeAttack() {
+  const foe = curFoe(), me = active();
+  if (foe.hp <= 0 || me.hp <= 0) return false;
+  await useMove(foe, me, aiPick(foe, me), false);
+  return await resolveFaints();
+}
+async function endOfTurn() {
+  for (const isMe of [true, false]) {
+    if (!battle || battle.over) return;
+    const c = isMe ? active() : curFoe();
+    if (c.hp > 0 && c.hp < maxHp(c) && traitOf(c) === 'regen') {
+      c.hp = Math.min(maxHp(c), c.hp + Math.max(1, Math.floor(maxHp(c) / 12)));
+      updateBars(); await say(label(c, isMe) + ' regenerated some HP! (💚 Regenerate)', 900);
+    }
+    if (c.hp > 0 && (c.status === 'burn' || c.status === 'psn')) {
+      c.hp = Math.max(0, c.hp - Math.max(1, Math.floor(maxHp(c) / (c.status === 'psn' ? 10 : 12))));
+      anim(isMe ? 'meSpr' : 'foeSpr', 'hit');
+      updateBars();
+      await say(label(c, isMe) + ' is hurt by its ' + (c.status === 'psn' ? 'poison' : 'burn') + '!', 1000);
+      if (await resolveFaints()) return;
+    }
+  }
+}
+async function doSwitch(idx, forced) {
+  const old = active();
+  freshBattleState(old);
+  if (!forced) await say('Come back, ' + cname(old) + '!', 800);
+  battle.pi = idx;
+  freshBattleState(active());
+  battle.part.add(active().uid);
+  renderSide('me', true);
+  await say('Go, ' + cname(active()) + '!', 900);
+}
+async function resolveFaints() {
+  if (!battle || battle.over) return true;
+  let any = false;
+  const foe = curFoe();
+  if (foe.hp <= 0) {
+    any = true;
+    anim('foeSpr', 'faint');
+    await say(label(foe, false) + ' fainted!', 1000);
+    await awardXP(foe);
+    if (battle.kind === 'trainer' && battle.fi < battle.foes.length - 1) {
+      battle.fi++;
+      battle.part = new Set([active().uid]);
+      markSeen(curFoe().sid);
+      renderSide('foe', true);
+      await say(battle.trainer.name + ' sent out ' + cname(curFoe()) + '!');
+    } else { await winBattle(); return true; }
+  }
+  const me = active();
+  if (me.hp <= 0) {
+    any = true;
+    anim('meSpr', 'faint');
+    await say(cname(me) + ' fainted!', 1000);
+    if (S.team.some(c => c.hp > 0)) { const idx = await chooseSwitch(true); await doSwitch(idx, true); }
+    else { await loseBattle(); return true; }
+  }
+  return any;
+}
+async function awardXP(foe) {
+  const sp = getSpecies(foe.sid);
+  const base = Math.floor((sp.bst / 5) * foe.lvl / 5 * (battle.kind === 'trainer' ? 1.5 : 1)) + 5;
+  let others = false;
+  for (const c of S.team) {
+    if (c.hp <= 0 || c.lvl >= 100) continue;
+    const p = battle.part.has(c.uid);
+    const g = Math.max(1, Math.floor(base * (p ? 1 : 0.35) * clamp((foe.lvl + 5) / (c.lvl + 5), 0.4, 2)));
+    c.xp += g;
+    if (p) { updateBars(); await say(cname(c) + ' gained ' + fmt(g) + ' XP!', 950); } else others = true;
+    while (c.lvl < 100 && c.xp >= xpNeed(c.lvl)) { c.xp -= xpNeed(c.lvl); await levelUp(c); }
+  }
+  if (others) await say('The rest of your team gained some XP too.', 900);
+  updateBars();
+}
+async function levelUp(c) {
+  const oldMax = maxHp(c);
+  c.lvl++;
+  if (c.hp > 0) c.hp += maxHp(c) - oldMax;
+  const sp = getSpecies(c.sid);
+  if (c === active()) renderInfoOnly();
+  await say(cname(c) + ' grew to Lv ' + c.lvl + '!', 1000);
+  if (sp.evoLvl && c.lvl >= sp.evoLvl) c.evo = true;
+}
+async function winBattle() {
+  let coins;
+  if (battle.kind === 'trainer') {
+    coins = battle.foes.reduce((s, c) => s + c.lvl, 0) * 12;
+    S.beaten[battle.trainer.key] = 1;
+    await say('You defeated ' + battle.trainer.name + '!');
+  } else coins = Math.max(3, Math.floor(curFoe().lvl * 1.5) + randInt(0, 5));
+  if (traitOf(active()) === 'rich') { coins = Math.floor(coins * 1.5); await say(cname(active()) + ' sniffed out extra treasure! (💰 Treasure Nose)', 1000); }
+  S.coins += coins;
+  S.wins++;
+  await say('You got ' + fmt(coins) + ' coins!', 1000);
+  await endBattle();
+}
+async function loseBattle() {
+  const lost = Math.floor(S.coins / 2);
+  S.coins -= lost;
+  await say("You're out of usable creatures!", 1100);
+  await say('You hurried back to the last shrine... (lost ' + fmt(lost) + ' coins)', 1600);
+  healAll();
+  const r = S.respawn || S.spawn;
+  P.x = r.x; P.y = r.y; P.moving = false;
+  await endBattle(true);
+}
+async function tryCatch(orb) {
+  S.items[orb]--;
+  const foe = curFoe(), sp = getSpecies(foe.sid);
+  const orbEl = $('orbEl');
+  orbEl.className = 'b-orb ' + orb + ' throw';
+  await say('You threw a' + (orb === 'orb' ? 'n' : '') + ' ' + ITEMS[orb].name + '!', 700);
+  $('foeSpr').classList.add('sucked');
+  await wait(400);
+  const hpf = foe.hp / maxHp(foe);
+  let p = (0.12 + 0.88 * (1 - hpf)) * RARITY[sp.rarity].catch * ITEMS[orb].mult * (foe.status ? 1.4 : 1) * clamp((active().lvl + 10) / (foe.lvl + 10), 0.6, 1.25);
+  if (foe.shiny) p *= 1.2;
+  p = clamp(p, 0.02, 1);
+  const ok = rnd() < p;
+  const shakes = ok ? 3 : (rnd() < p ? 2 : rnd() < 0.5 ? 1 : 0);
+  for (let i = 0; i < shakes; i++) {
+    orbEl.className = 'b-orb ' + orb; void orbEl.offsetWidth; orbEl.className = 'b-orb ' + orb + ' wobble';
+    await say('.'.repeat(i + 1) + ' wobble ' + '.'.repeat(i + 1), 750);
+  }
+  if (ok) {
+    orbEl.className = 'b-orb ' + orb + ' caught';
+    const isNew = !S.caught[foe.sid];
+    await say('Gotcha! ' + cname(foe) + ' was caught!', 1300);
+    delete foe.bs; foe.status = null; foe.uid = S.uid++;
+    markCaught(foe.sid);
+    if (isNew) await say('📖 ' + cname(foe) + ' (' + dexNo(foe.sid) + ') was registered in your Creaturedex!', 1500);
+    if (S.team.length < 6) { S.team.push(foe); await say(cname(foe) + ' joined your team!', 1000); }
+    else { S.box.unshift(foe); await say('Your team is full, so ' + cname(foe) + ' was sent to the Box.', 1300); }
+    orbEl.className = 'b-orb hidden';
+    return true;
+  }
+  orbEl.className = 'b-orb hidden';
+  $('foeSpr').classList.remove('sucked');
+  anim('foeSpr', 'appear');
+  await say(['Oh no! It broke free!', 'Aww! It appeared to be caught!', 'Argh! Almost had it!'][shakes] || 'Shoot! So close!', 1000);
+  return false;
+}
+async function endBattle(lost) {
+  if (!battle) return;
+  battle.over = true;
+  for (const c of S.team) { delete c.bs; c.status = null; }
+  $('battle').classList.add('hidden');
+  $('orbEl').className = 'b-orb hidden';
+  ['meSpr', 'foeSpr'].forEach(id => anim(id, null));
+  battle = null;
+  mode = 'world';
+  grace = 3;
+  teamBarKey = '';
+  computeShrineHint();
+  updateHUD();
+  if (!lost) await runEvolutions();
+  updateHUD();
+  saveGame();
+}
+function drawEvo(sid, shiny, white) {
+  const cv = $('evoCv'), c = cv.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  c.clearRect(0, 0, 224, 224);
+  c.drawImage(getSprite(sid, shiny, false), 0, 0, 224, 224);
+  if (white) { c.globalCompositeOperation = 'source-atop'; c.fillStyle = '#fff'; c.fillRect(0, 0, 224, 224); c.globalCompositeOperation = 'source-over'; }
+}
+async function runEvolutions() {
+  for (const c of S.team) {
+    if (!c.evo) continue;
+    delete c.evo;
+    while (getSpecies(c.sid).evoLvl && c.lvl >= getSpecies(c.sid).evoLvl) await evolveOne(c);
+  }
+  mode = 'world';
+  teamBarKey = '';
+}
+async function evolveOne(c) {
+  const sp = getSpecies(c.sid), nsp = getSpecies(c.sid + 1);
+  const before = { hp: maxHp(c), atk: stat(c, 'atk'), def: stat(c, 'def'), spd: stat(c, 'spd') };
+  mode = 'evo';
+  $('evo').classList.remove('hidden');
+  $('evoBtn').classList.add('hidden');
+  $('evoDet').innerHTML = '';
+  $('evoMsg').textContent = 'What? ' + sp.name + ' is evolving!';
+  drawEvo(c.sid, c.shiny, false);
+  await wait(900);
+  for (let i = 0; i < 16; i++) { drawEvo(i % 2 ? c.sid + 1 : c.sid, c.shiny, true); await wait(260 - i * 13); }
+  c.sid += 1;
+  c.hp = maxHp(c); c.status = null;
+  markCaught(c.sid);
+  drawEvo(c.sid, c.shiny, false);
+  const after = { hp: maxHp(c), atk: stat(c, 'atk'), def: stat(c, 'def'), spd: stat(c, 'spd') };
+  $('evoMsg').innerHTML = '🎉 ' + esc(sp.name) + ' evolved into <b>' + esc(nsp.name) + '</b>! ' + formBadge(nsp);
+  let h = '<table class="evo-stats">' + [['hp', 'HP'], ['atk', 'Attack'], ['def', 'Defense'], ['spd', 'Speed']].map(([k, l]) =>
+    '<tr><td>' + l + '</td><td>' + before[k] + '</td><td>➜</td><td><b>' + after[k] + '</b></td><td class="good">+' + (after[k] - before[k]) + '</td></tr>').join('') + '</table>';
+  h += '<ul class="evo-list"><li>❤️ Fully healed! Still Lv ' + c.lvl + '.</li>';
+  const newType = nsp.types.find(t => !sp.types.includes(t));
+  if (newType) h += '<li>🌈 Gained a new type: ' + typeBadge(newType) + '</li>';
+  if (nsp.trait && nsp.trait !== sp.trait) h += '<li>✨ ' + (sp.trait ? 'New trait' : 'Unlocked a trait') + ': ' + traitChip(nsp.trait) + ' — ' + TRAITS[nsp.trait].desc + '</li>';
+  h += '<li>⚔️ All attacks got stronger ' + stars(nsp.k) + '</li>';
+  if (nsp.evoLvl) h += '<li>🔜 Next evolution at Lv ' + nsp.evoLvl + '</li>'; else h += '<li>⭐ This is its MAX form — fully evolved!</li>';
+  h += '</ul>';
+  const newIdx = nsp.unlocked > sp.unlocked ? nsp.unlocked - 1 : -1;
+  if (newIdx >= 0) {
+    const m = nsp.attacks[newIdx];
+    h += '<div class="evo-new">🔓 <b>New attack unlocked:</b> ' + TYPE_ICON[m.type] + ' <b>' + esc(m.name) + '</b> ' + typeBadge(m.type) + '<div class="muted">' + moveDesc(m) + '</div>' +
+      '<div class="evo-q">Equip it? Pick an attack to replace:</div><div class="evo-swap">' +
+      c.moves.map(i => '<button class="btn sm alt" data-evswap="' + i + '">⇄ ' + esc(nsp.attacks[i].name) + '</button>').join('') + '</div></div>';
+  }
+  $('evoDet').innerHTML = h;
+  $('evoBtn').textContent = newIdx >= 0 ? 'Keep my current attacks' : 'Awesome!';
+  $('evoBtn').classList.remove('hidden');
+  await new Promise(res => {
+    $('evoBtn').onclick = res;
+    $('evoDet').querySelectorAll('[data-evswap]').forEach(b => b.onclick = () => {
+      c.moves[c.moves.indexOf(+b.dataset.evswap)] = newIdx;
+      toast(nsp.name + ' equipped ' + nsp.attacks[newIdx].name + '!');
+      res();
+    });
+  });
+  $('evo').classList.add('hidden');
+}
+
+// ---------------- title, starter, boot ----------------
+function paradeTick() {
+  if (mode !== 'title') return;
+  const el = $('parade');
+  let h = '';
+  const ids = [];
+  for (let i = 0; i < 7; i++) ids.push(Math.floor(rnd() * TOTAL_SPECIES));
+  for (const sid of ids) {
+    const sp = getSpecies(sid);
+    h += '<div class="p">' + sprHTML(sid, rnd() < 0.05, 88) + '<span>' + esc(sp.name) + '</span><small>' + sp.types.map(t => TYPE_ICON[t]).join(' ') + ' · ' + dexNo(sid) + '</small></div>';
+  }
+  el.innerHTML = h;
+  paintSprites(el);
+  setTimeout(paradeTick, 3200);
+}
+let starterFams = [];
+function rollStarters() { starterFams = ['Flame', 'Aqua', 'Leaf'].map(t => { let f; do { f = famOfType(t); } while (famRarity(f) > 2); return f; }); }
+function openStarter() {
+  mode = 'starter';
+  $('title').classList.add('hidden');
+  $('starter').classList.remove('hidden');
+  const el = $('starterList');
+  el.innerHTML = starterFams.map((f, i) => {
+    const sp = getSpecies(f * STAGES), sp3 = getSpecies(f * STAGES + 3);
+    return '<div class="starter">' + sprHTML(sp.id, false, 160) + '<h3>' + esc(sp.name) + '</h3><div class="cc-tags">' + sp.types.map(typeBadge).join('') + rarBadge(sp.rarity) + '</div>' +
+      '<div style="width:100%">' + statsHTML(sp, null) + '</div><div class="muted" style="font-size:13px">Evolves 3 times: Lv ' + sp.evoLvls.join(' → ') + '<br>MAX form: ' + esc(sp3.name) + '</div><div class="st-evo">' + [1, 2, 3].map(k => sprHTML(f * STAGES + k, false, 40, true)).join('<span>➜</span>') + '</div><button class="btn" data-pick="' + i + '">Choose ' + esc(sp.name) + '!</button></div>';
+  }).join('');
+  paintSprites(el);
+  el.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+    const f = starterFams[+b.dataset.pick];
+    const c = makeCreature(f * STAGES, 5, false);
+    S.team = [c];
+    markCaught(c.sid);
+    $('starter').classList.add('hidden');
+    beginWorld();
+    toast('You and ' + cname(c) + ' set off into an endless world!');
+    saveGame();
+  });
+}
+$('rerollBtn').onclick = () => { rollStarters(); openStarter(); };
+function setupWorld() {
+  WSEED = S.seed;
+  SPAWN = S.spawn;
+  resetWorld();
+}
+function beginWorld() {
+  mode = 'world';
+  $('hud').classList.remove('hidden');
+  $('teamBar').classList.remove('hidden');
+  $('hint').classList.remove('hidden');
+  lastChunkKey = '';
+  computeShrineHint();
+  teamBarKey = '';
+  updateHUD();
+}
+$('btnNew').onclick = () => {
+  if (loadGame() && !confirm('Start a new world? Your current save will be erased.')) return;
+  S = newState((rnd() * 4294967296) >>> 0);
+  WSEED = S.seed; SPAWN = null; resetWorld();
+  S.spawn = findSpawn();
+  S.respawn = { x: S.spawn.x, y: S.spawn.y };
+  setupWorld();
+  P.x = S.spawn.x; P.y = S.spawn.y; P.moving = false; P.facing = 'down';
+  rollStarters();
+  openStarter();
+};
+$('btnContinue').onclick = () => {
+  const s = loadGame();
+  if (!s) return;
+  S = s;
+  setupWorld();
+  P.x = S.px; P.y = S.py; P.moving = false;
+  $('title').classList.add('hidden');
+  beginWorld();
+  if (S.migrated) { delete S.migrated; toast('Update! Every creature now has 4 forms and 5 attacks. Win a battle to evolve!'); saveGame(); }
+  else toast('Welcome back! ' + countKeys(S.caught) + ' species caught so far.');
+};
+// ================= WORLD MAP (M) — shows the 512×512 section you're standing in =================
+const MAP_SIZE = 512;
+const MAP_RGB = [];
+[[T.DEEP, '#1d4a86'], [T.SHALLOW, '#3d86c9'], [T.SAND, '#e6d395'], [T.GRASS, '#63b350'], [T.TALL, '#4c9a3d'], [T.FLOWER, '#7cc46a'],
+ [T.FOREST, '#3f7f39'], [T.TREE, '#235a27'], [T.FTALL, '#336f2f'], [T.DESERT, '#ebc77d'], [T.DUNE, '#d8ac60'], [T.CACTUS, '#3d8a4a'],
+ [T.SNOW, '#eef5fb'], [T.SNOWTALL, '#cfe2ef'], [T.PINE, '#2c5d48'], [T.SWAMP, '#566c3b'], [T.REEDS, '#6d6b3b'], [T.VOLC, '#4b3b3b'],
+ [T.ASH, '#6c5a58'], [T.LAVA, '#f0601d'], [T.ROCK, '#8a8580'], [T.RUBBLE, '#77726b'], [T.MOUNTAIN, '#c4beb6'], [T.SHRINE, '#5ee6ff']]
+  .forEach(([t, hex]) => { MAP_RGB[t] = [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]; });
+const MAP_LEGEND = [['Meadow', '#63b350'], ['Forest', '#3f7f39'], ['Desert', '#ebc77d'], ['Tundra', '#eef5fb'], ['Swamp', '#566c3b'], ['Volcano', '#4b3b3b'], ['Lava', '#f0601d'], ['Coast / water', '#3d86c9'], ['Deep water', '#1d4a86'], ['Highlands', '#8a8580'], ['Mountains', '#c4beb6']];
+const mapCache = new Map();
+let mapJob = 0, mapOpen = false, mapSec = null;
+function sectionOf(x, y) { return { rx: Math.floor(x / MAP_SIZE), ry: Math.floor(y / MAP_SIZE) }; }
+function sectionLabel(rx, ry) { return rx + ', ' + ry; }
+async function buildSection(rx, ry, onProg) {
+  const key = WSEED + ':' + rx + ',' + ry;
+  if (mapCache.has(key)) return mapCache.get(key);
+  const job = mapJob, x0 = rx * MAP_SIZE, y0 = ry * MAP_SIZE;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = MAP_SIZE;
+  const c = cv.getContext('2d'), img = c.createImageData(MAP_SIZE, MAP_SIZE), d = img.data;
+  for (let y = 0; y < MAP_SIZE; y++) {
+    for (let x = 0; x < MAP_SIZE; x++) {
+      const rgb = MAP_RGB[genBase(x0 + x, y0 + y)], i = (y * MAP_SIZE + x) * 4;
+      d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2]; d[i + 3] = 255;
+    }
+    if ((y & 15) === 15) {
+      onProg((y + 1) / MAP_SIZE);
+      await new Promise(r => setTimeout(r, 0));
+      if (job !== mapJob) return null; // map was closed
+    }
+  }
+  c.putImageData(img, 0, 0);
+  const shrines = [], trainers = [];
+  const c0x = x0 / CHUNK, c0y = y0 / CHUNK, n = MAP_SIZE / CHUNK;
+  for (let cy = c0y; cy < c0y + n; cy++) for (let cx = c0x; cx < c0x + n; cx++) {
+    const s = shrineIn(cx, cy);
+    if (s) shrines.push(s);
+    for (const t of trainersIn(cx, cy, s)) trainers.push(t);
+  }
+  const res = { cv, shrines, trainers, x0, y0 };
+  mapCache.set(key, res);
+  if (mapCache.size > 6) mapCache.delete(mapCache.keys().next().value);
+  return res;
+}
+function drawMap(sec) {
+  const cv = $('mapCv');
+  if (!cv || !sec) return;
+  const c = cv.getContext('2d'), k = cv.width / MAP_SIZE;
+  c.imageSmoothingEnabled = false;
+  c.drawImage(sec.cv, 0, 0, cv.width, cv.height);
+  // faint grid every 64 tiles
+  c.strokeStyle = 'rgba(255,255,255,0.10)'; c.lineWidth = 1;
+  for (let i = 64; i < MAP_SIZE; i += 64) { c.beginPath(); c.moveTo(i * k, 0); c.lineTo(i * k, cv.height); c.moveTo(0, i * k); c.lineTo(cv.width, i * k); c.stroke(); }
+  const px = t => (t + 0.5) * k;
+  // trainers
+  for (const t of sec.trainers) {
+    const beaten = S.beaten[t.x + ',' + t.y];
+    c.fillStyle = beaten ? '#8b8fa8' : '#ff8a3d';
+    c.fillRect(px(t.x - sec.x0) - 3, px(t.y - sec.y0) - 3, 6, 6);
+  }
+  // shrines
+  for (const s of sec.shrines) {
+    const x = px(s.x - sec.x0), y = px(s.y - sec.y0);
+    c.fillStyle = '#0b0e1d'; c.beginPath(); c.arc(x, y, 6.5, 0, 6.2832); c.fill();
+    c.fillStyle = (S.respawn && S.respawn.x === s.x && S.respawn.y === s.y) ? '#ffcc4d' : '#5ee6ff';
+    c.beginPath(); c.moveTo(x, y - 6); c.lineTo(x + 4.5, y); c.lineTo(x, y + 6); c.lineTo(x - 4.5, y); c.fill();
+  }
+  // start point
+  if (S.spawn && S.spawn.x >= sec.x0 && S.spawn.x < sec.x0 + MAP_SIZE && S.spawn.y >= sec.y0 && S.spawn.y < sec.y0 + MAP_SIZE) {
+    const x = px(S.spawn.x - sec.x0), y = px(S.spawn.y - sec.y0);
+    c.font = 'bold 20px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#0b0e1d'; c.fillText('★', x + 1, y + 1); c.fillStyle = '#fff36b'; c.fillText('★', x, y);
+  }
+  // what's on screen right now
+  const vw = Math.ceil(VW / TILE), vh = Math.ceil(VH / TILE);
+  c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2;
+  c.strokeRect((P.x - sec.x0 - vw / 2) * k, (P.y - sec.y0 - vh / 2) * k, vw * k, vh * k);
+  // you
+  const me = $('mapMe');
+  me.style.left = ((P.x - sec.x0 + 0.5) / MAP_SIZE * 100) + '%';
+  me.style.top = ((P.y - sec.y0 + 0.5) / MAP_SIZE * 100) + '%';
+  me.classList.remove('hidden');
+  $('mapCounts').innerHTML = '⛩️ ' + sec.shrines.length + ' shrines · 🧢 ' + sec.trainers.filter(t => !S.beaten[t.x + ',' + t.y]).length + ' trainers left (' + sec.trainers.filter(t => S.beaten[t.x + ',' + t.y]).length + ' beaten)';
+}
+function mapHover(e) {
+  const sec = mapSec, cv = $('mapCv');
+  if (!sec || !cv) return;
+  const r = cv.getBoundingClientRect();
+  const tx = sec.x0 + clamp(Math.floor((e.clientX - r.left) / r.width * MAP_SIZE), 0, MAP_SIZE - 1);
+  const ty = sec.y0 + clamp(Math.floor((e.clientY - r.top) / r.height * MAP_SIZE), 0, MAP_SIZE - 1);
+  const t = tileAt(tx, ty), info = TI[t];
+  const sh = sec.shrines.find(s => Math.abs(s.x - tx) <= 2 && Math.abs(s.y - ty) <= 2);
+  const tr = sec.trainers.find(s => Math.abs(s.x - tx) <= 2 && Math.abs(s.y - ty) <= 2);
+  const dist = Math.round(Math.hypot(tx - P.x, ty - P.y));
+  $('mapHover').innerHTML = '<b>(' + tx + ', ' + ty + ')</b> · ' + info.region + (info.walk ? '' : ' (blocked)') + (info.enc ? ' · creatures here' : '') + ' · wild Lv ~' + wildBase(tx, ty) +
+    '<br>' + fmt(dist) + ' tiles from you' + (sh ? ' · ⛩️ Healing Shrine' : '') + (tr ? ' · 🧢 Trainer' + (S.beaten[tr.x + ',' + tr.y] ? ' (beaten)' : '') : '');
+}
+async function openMap() {
+  const { rx, ry } = sectionOf(P.x, P.y);
+  const x0 = rx * MAP_SIZE, y0 = ry * MAP_SIZE;
+  mapJob++; mapOpen = true; mapSec = null;
+  const legend = MAP_LEGEND.map(([n, col]) => '<span class="mleg"><i style="background:' + col + '"></i>' + n + '</span>').join('') +
+    '<span class="mleg"><i class="mk-me"></i>You</span><span class="mleg"><i class="mk-sh"></i>Shrine</span><span class="mleg"><i class="mk-sh home"></i>Your respawn shrine</span><span class="mleg"><i class="mk-tr"></i>Trainer</span><span class="mleg"><i class="mk-tr done"></i>Beaten trainer</span><span class="mleg"><b class="mk-st">★</b>Where you started</span>';
+  openPanel('🗺️ Map — Section ' + sectionLabel(rx, ry), '<div class="map-wrap"><div class="map-box"><canvas id="mapCv" width="1024" height="1024"></canvas><div id="mapMe" class="map-me hidden"></div><div id="mapProg" class="map-prog">Drawing map… 0%</div></div>' +
+    '<div class="map-side"><div class="map-sec">Section <b>' + sectionLabel(rx, ry) + '</b></div>' +
+    '<div class="muted">Tiles x <b>' + fmt(x0) + '</b> to <b>' + fmt(x0 + MAP_SIZE - 1) + '</b><br>Tiles y <b>' + fmt(y0) + '</b> to <b>' + fmt(y0 + MAP_SIZE - 1) + '</b></div>' +
+    '<div class="map-you">📍 You are at <b>(' + P.x + ', ' + P.y + ')</b><br>' + edgeHint(x0, y0) + '</div>' +
+    '<div id="mapCounts" class="muted"></div><div id="mapHover" class="map-hover">Point at the map to see what\'s there.</div>' +
+    '<div class="map-legend">' + legend + '</div><p class="muted" style="font-size:12px">The world never ends! It is split into sections of 512 × 512 tiles. Walk past an edge and the map shows the next section. Press <kbd>M</kbd> or <kbd>Esc</kbd> to close.</p></div></div>', b => {
+      $('mapCv').addEventListener('mousemove', mapHover);
+    });
+  const sec = await buildSection(rx, ry, f => { const p = $('mapProg'); if (p) p.textContent = 'Drawing map… ' + Math.round(f * 100) + '%'; });
+  if (!sec || !mapOpen || !$('mapCv')) return;
+  mapSec = sec;
+  $('mapProg').classList.add('hidden');
+  drawMap(sec);
+}
+function edgeHint(x0, y0) {
+  const toE = x0 + MAP_SIZE - P.x, toW = P.x - x0 + 1, toS = y0 + MAP_SIZE - P.y, toN = P.y - y0 + 1;
+  const m = Math.min(toE, toW, toS, toN);
+  const dir = m === toE ? 'east ➡️' : m === toW ? 'west ⬅️' : m === toS ? 'south ⬇️' : 'north ⬆️';
+  return 'Next section: ' + m + ' tiles ' + dir;
+}
+
+// ================= CLOUD SAVE (Google Doc + Apps Script, offline queue in IndexedDB) =================
+const CLOUD_KEY = 'cq_cloud_cfg';
+const APPS_SCRIPT = `// ===== Creature Quest ∞ — Cloud Save script =====
+// Paste this into your Google Doc: Extensions → Apps Script.
+// Then run "setup" once, and Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone).
+
+const BEGIN = '=====BEGIN SAVE CODE=====';
+const END = '=====END SAVE CODE=====';
+
+function setup() {
+  const doc = DocumentApp.getActiveDocument();
+  PropertiesService.getScriptProperties().setProperty('DOC_ID', doc.getId());
+  writeDoc_(null, []);
+}
+
+function doc_() {
+  const id = PropertiesService.getScriptProperties().getProperty('DOC_ID');
+  return id ? DocumentApp.openById(id) : DocumentApp.getActiveDocument();
+}
+
+function out_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const savedAt = Number(props.getProperty('SAVED_AT') || 0);
+    const doc = doc_();
+    if (e && e.parameter && e.parameter.action === 'load') {
+      const text = doc.getBody().getText();
+      const a = text.indexOf(BEGIN), b = text.indexOf(END);
+      if (a < 0 || b < 0) return out_({ ok: true, code: null });
+      return out_({ ok: true, code: text.slice(a + BEGIN.length, b).replace(/\\s+/g, ''), savedAt: savedAt });
+    }
+    return out_({ ok: true, doc: doc.getName(), savedAt: savedAt });
+  } catch (err) {
+    return out_({ ok: false, error: String(err) });
+  }
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const props = PropertiesService.getScriptProperties();
+    const last = Number(props.getProperty('SAVED_AT') || 0);
+    if (!data.force && data.savedAt < last) {
+      return out_({ ok: true, skipped: true, savedAt: last });
+    }
+    const history = JSON.parse(props.getProperty('HISTORY') || '[]');
+    history.unshift({ t: data.savedAt, s: String(data.summary || '').slice(0, 200), via: data.via || 'online' });
+    props.setProperty('HISTORY', JSON.stringify(history.slice(0, 15)));
+    props.setProperty('SAVED_AT', String(data.savedAt));
+    writeDoc_(data, history.slice(0, 15));
+    return out_({ ok: true, savedAt: data.savedAt });
+  } catch (err) {
+    return out_({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function when_(t) {
+  return Utilities.formatDate(new Date(t), Session.getScriptTimeZone(), 'EEE MMM d, yyyy h:mm a');
+}
+
+function writeDoc_(data, history) {
+  const body = doc_().getBody();
+  body.clear();
+  body.appendParagraph('Creature Quest ∞ — Cloud Save').setHeading(DocumentApp.ParagraphHeading.TITLE);
+  let url = '';
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (err) {}
+  if (!data) {
+    body.appendParagraph('Ready! Press ☁️ Save in the game and your save code will appear here.');
+    return;
+  }
+  body.appendParagraph('Last saved: ' + when_(data.savedAt) + (data.via === 'offline' ? '  (made with no Wi-Fi, uploaded later)' : ''));
+  body.appendParagraph(String(data.summary || ''));
+  body.appendParagraph('To load on another computer: in the game open ☁️ Cloud Save, paste the game link below and press "Load from Doc" — or copy the code between the two lines and use "Paste a save code".').editAsText().setItalic(true);
+  if (url) body.appendParagraph('Game link: ' + url);
+  body.appendParagraph(BEGIN);
+  body.appendParagraph(data.code).editAsText().setFontFamily('Courier New').setFontSize(6);
+  body.appendParagraph(END);
+  body.appendParagraph('Save history').setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  history.forEach(function (h) {
+    body.appendListItem(when_(h.t) + ' — ' + h.s + (h.via === 'offline' ? '  (offline save)' : ''));
+  });
+}
+`;
+let cloudCfg = {};
+try { cloudCfg = JSON.parse(localStorage.getItem(CLOUD_KEY) || '{}') || {}; } catch (e) { cloudCfg = {}; }
+function saveCloudCfg() { try { localStorage.setItem(CLOUD_KEY, JSON.stringify(cloudCfg)); } catch (e) { } }
+let cloudPending = null, cloudBusy = false, cloudPrevMode = 'title';
+
+// ---- IndexedDB queue (falls back to localStorage if IndexedDB is unavailable) ----
+const IDBQ = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (this.db) return res(this.db);
+      let r;
+      try { r = indexedDB.open('creatureQuestCloud', 1); } catch (e) { return rej(e); }
+      r.onupgradeneeded = () => r.result.createObjectStore('pending');
+      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('pending', mode), st = t.objectStore('pending');
+      const rq = fn(st);
+      t.oncomplete = () => res(rq ? rq.result : undefined);
+      t.onerror = () => rej(t.error);
+    });
+  },
+  async put(v) { try { await this.tx('readwrite', s => s.put(v, 'latest')); } catch (e) { localStorage.setItem('cq_pending', JSON.stringify(v)); } },
+  async get() { try { const v = await this.tx('readonly', s => s.get('latest')); if (v) return v; } catch (e) { } try { return JSON.parse(localStorage.getItem('cq_pending') || 'null'); } catch (e) { return null; } },
+  async del() { try { await this.tx('readwrite', s => s.delete('latest')); } catch (e) { } try { localStorage.removeItem('cq_pending'); } catch (e) { } },
+};
+
+// ---- save codes ----
+function bytesToB64(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s); }
+function b64ToBytes(b) { const s = atob(b); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+async function gzipBytes(bytes, compress) {
+  const cs = compress ? new CompressionStream('gzip') : new DecompressionStream('gzip');
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(cs)).arrayBuffer());
+}
+async function makeSaveCode() {
+  S.px = P.moving ? P.tx : P.x; S.py = P.moving ? P.ty : P.y;
+  const json = JSON.stringify(S, (k, v) => (k === 'bs' || k === 'migrated') ? undefined : v);
+  const raw = new TextEncoder().encode(json);
+  if (typeof CompressionStream !== 'undefined') { try { return 'CQ2Z' + bytesToB64(await gzipBytes(raw, true)); } catch (e) { } }
+  return 'CQ2J' + bytesToB64(raw);
+}
+async function readSaveCode(code) {
+  code = String(code || '').replace(/\s+/g, '');
+  const tag = code.slice(0, 4), body = code.slice(4);
+  let bytes = b64ToBytes(body);
+  if (tag === 'CQ2Z') bytes = await gzipBytes(bytes, false);
+  else if (tag !== 'CQ2J') throw new Error('That is not a Creature Quest save code.');
+  const s = JSON.parse(new TextDecoder().decode(bytes));
+  if (!s || !s.team || !s.seed) throw new Error('That save code looks broken.');
+  return migrate(s);
+}
+function saveSummary() {
+  return 'Caught ' + fmt(countKeys(S.caught)) + ' species · ' + fmt(S.coins) + ' coins · ' + fmt(S.steps) + ' steps · Team: ' + S.team.map(c => cname(c) + ' Lv ' + c.lvl).join(', ');
+}
+
+// ---- network ----
+function cloudReady() { return !!cloudCfg.url; }
+async function cloudFetch(opts, query, ms) {
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const tm = setTimeout(() => ctl && ctl.abort(), ms || 20000);
+  try {
+    const r = await fetch(cloudCfg.url + (query || ''), Object.assign({ redirect: 'follow', signal: ctl ? ctl.signal : undefined }, opts || {}));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'The doc said no.');
+    return j;
+  } finally { clearTimeout(tm); }
+}
+async function postSave(entry) {
+  // text/plain body = "simple" request, so Apps Script answers without CORS trouble
+  return cloudFetch({ method: 'POST', body: JSON.stringify(entry) }, '', 30000);
+}
+async function cloudSave() {
+  if (!S || !S.team.length) return;
+  if (!cloudReady()) { openCloud(); return; }
+  if (cloudBusy) return;
+  cloudBusy = true;
+  saveGame();
+  const entry = { code: await makeSaveCode(), savedAt: Date.now(), summary: saveSummary(), via: 'online' };
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    toast('☁️ Saving to your Google Doc…');
+    const r = await postSave(entry);
+    await IDBQ.del(); cloudPending = null;
+    cloudCfg.lastSync = Date.now(); saveCloudCfg();
+    toast(r.skipped ? '☁️ Your doc already has a newer save — kept that one.' : '✅ Saved to your Google Doc!');
+  } catch (e) {
+    entry.via = 'offline';
+    await IDBQ.put(entry); cloudPending = entry;
+    toast(navigator.onLine ? '📦 Couldn\'t reach the doc — saved on this computer. Will upload automatically.' : '📦 No Wi-Fi — saved on this computer. It will upload when Wi-Fi is back!');
+  }
+  cloudBusy = false;
+  updateHUD(); renderCloudRow();
+}
+async function flushPending() {
+  if (!cloudReady() || cloudBusy || !navigator.onLine) return;
+  const p = cloudPending || await IDBQ.get();
+  if (!p) return;
+  cloudBusy = true;
+  try {
+    const r = await postSave(p);
+    await IDBQ.del(); cloudPending = null;
+    cloudCfg.lastSync = Date.now(); saveCloudCfg();
+    toast(r.skipped ? '☁️ Back online — your doc already had a newer save.' : '✅ Back online! Your offline save was uploaded to your Google Doc.');
+  } catch (e) { /* still no luck — try again later */ }
+  cloudBusy = false;
+  if (S) updateHUD();
+  renderCloudRow();
+}
+addEventListener('online', () => setTimeout(flushPending, 1500));
+addEventListener('offline', () => { if (S) updateHUD(); renderCloudRow(); });
+setInterval(() => { if (cloudPending) flushPending(); }, 45000);
+function cloudStatusHTML() {
+  if (!cloudReady()) return '☁️ Cloud save not set up';
+  if (cloudPending) return '📦 Save waiting for Wi-Fi' + (navigator.onLine ? ' (retrying…)' : '');
+  if (cloudCfg.lastSync) return '☁️ Saved to Doc ' + new Date(cloudCfg.lastSync).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return '☁️ Connected — press ☁️ Save';
+}
+
+// ---- UI ----
+function renderCloudRow() {
+  const el = $('cloudRow');
+  if (!el) return;
+  if (!cloudReady()) el.innerHTML = '☁️ <b>Cloud save:</b> not set up yet. <button class="btn sm alt" id="crSetup">Set up Google Doc save</button>';
+  else el.innerHTML = '☁️ <b>Cloud save:</b> ' + (cloudCfg.docName ? 'connected to “' + esc(cloudCfg.docName) + '”' : 'connected') + (cloudPending ? ' · 📦 1 save waiting for Wi-Fi' : '') +
+    ' <button class="btn sm alt" id="crLoad">⬇ Load from Doc</button> <button class="btn ghost sm" id="crSetup">Settings</button>';
+  if ($('crSetup')) $('crSetup').onclick = () => openCloud();
+  if ($('crLoad')) $('crLoad').onclick = () => loadFromDoc();
+}
+function openCloud(msg) {
+  if ($('cloudWrap').classList.contains('hidden')) { cloudPrevMode = mode; if (mode === 'world') mode = 'cloud'; }
+  const ready = cloudReady();
+  const step = (n, html) => '<div class="cstep"><span class="cnum">' + n + '</span><div>' + html + '</div></div>';
+  $('cloudBody').innerHTML =
+    (msg ? '<div class="cmsg">' + msg + '</div>' : '') +
+    '<p>Keep your adventure safe in a <b>Google Doc</b>. When there\'s Wi-Fi, pressing <b>☁️ Save</b> puts a save code in your doc. ' +
+    'With no Wi-Fi, the save is kept on this computer (in IndexedDB) and uploaded to the doc automatically as soon as Wi-Fi comes back.</p>' +
+    (ready ? '<div class="cstat good-bg">✅ Connected' + (cloudCfg.docName ? ' to <b>“' + esc(cloudCfg.docName) + '”</b>' : '') + ' · ' + cloudStatusHTML() + '</div>' : '') +
+    '<details class="csetup"' + (ready ? '' : ' open') + '><summary>' + (ready ? 'Setup steps (already done)' : 'Set it up — takes about 3 minutes (ask a grown-up to help with step 3!)') + '</summary>' +
+    step(1, 'Make a new Google Doc: <a href="https://docs.new" target="_blank" rel="noopener">docs.new</a> — name it something like <b>Creature Quest Save</b>.') +
+    step(2, 'In the doc, click <b>Extensions → Apps Script</b>. Delete everything in the code box, then paste this script and click 💾 <b>Save</b>:<div class="ccode"><textarea id="cScript" readonly spellcheck="false"></textarea><button class="btn sm" id="cCopy">📋 Copy script</button></div>') +
+    step(3, 'At the top, pick the function <b>setup</b> and press <b>▶ Run</b>. Google asks for permission: <b>Review permissions</b> → pick your account → <b>Advanced</b> → <b>Go to … (unsafe)</b> → <b>Allow</b>. (It\'s "unsafe" only because you wrote the script yourself.)') +
+    step(4, 'Click <b>Deploy → New deployment</b>. Click the ⚙️ gear → <b>Web app</b>. Set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Press <b>Deploy</b> and copy the <b>Web app URL</b> (it ends in <code>/exec</code>).') +
+    step(5, 'Paste the URL here and press Connect:') +
+    '</details>' +
+    '<div class="crow"><input id="cUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" value="' + esc(cloudCfg.url || '') + '"><button class="btn" id="cConnect">🔗 ' + (ready ? 'Reconnect' : 'Connect & test') + '</button></div>' +
+    '<div id="cResult" class="muted"></div>' +
+    '<div class="cbtns">' +
+    (ready && S && S.team && S.team.length && cloudPrevMode !== 'title' ? '<button class="btn" id="cSaveNow">☁️ Save now</button>' : '') +
+    (ready ? '<button class="btn alt" id="cLoad">⬇ Load save from Doc</button>' : '') +
+    (ready ? '<button class="btn ghost" id="cOff">Disconnect</button>' : '') + '</div>' +
+    '<details class="cpaste"><summary>Paste a save code instead</summary><p class="muted">Copy everything between <code>=====BEGIN SAVE CODE=====</code> and <code>=====END SAVE CODE=====</code> in your doc.</p><textarea id="cCode" spellcheck="false" placeholder="CQ2Z…"></textarea><button class="btn sm" id="cLoadCode">Load this code</button>' +
+    (S && S.team && S.team.length && cloudPrevMode !== 'title' ? ' <button class="btn ghost sm" id="cShowCode">Show my current save code</button>' : '') + '</details>';
+  $('cScript').value = APPS_SCRIPT;
+  $('cloudWrap').classList.remove('hidden');
+  $('cCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(APPS_SCRIPT); } catch (e) { $('cScript').select(); try { document.execCommand('copy'); } catch (e2) { } }
+    toast('📋 Script copied! Paste it into Apps Script.');
+  };
+  $('cConnect').onclick = connectCloud;
+  $('cUrl').addEventListener('keydown', e => { if (e.key === 'Enter') connectCloud(); });
+  if ($('cSaveNow')) $('cSaveNow').onclick = () => { closeCloud(); cloudSave(); };
+  if ($('cLoad')) $('cLoad').onclick = () => loadFromDoc();
+  if ($('cOff')) $('cOff').onclick = () => { if (confirm('Disconnect from the Google Doc? (Your doc and your game are not deleted.)')) { cloudCfg = { dismissed: true }; saveCloudCfg(); openCloud('Disconnected.'); renderCloudRow(); } };
+  $('cLoadCode').onclick = async () => { try { await applyLoadedSave(await readSaveCode($('cCode').value)); } catch (e) { $('cResult').innerHTML = '<span class="bad">❌ ' + esc(e.message) + '</span>'; } };
+  if ($('cShowCode')) $('cShowCode').onclick = async () => { $('cCode').value = await makeSaveCode(); $('cCode').select(); toast('This is your save code — you can copy it anywhere.'); };
+}
+function closeCloud() {
+  $('cloudWrap').classList.add('hidden');
+  if (mode === 'cloud') mode = cloudPrevMode === 'title' ? 'title' : 'world';
+  cloudCfg.dismissed = true; saveCloudCfg();
+  renderCloudRow();
+  if (S && mode === 'world') updateHUD();
+}
+$('cloudClose').onclick = closeCloud;
+async function connectCloud() {
+  const url = $('cUrl').value.trim();
+  const res = $('cResult');
+  if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(url)) { res.innerHTML = '<span class="bad">❌ That doesn\'t look like an Apps Script web app URL. It should start with https://script.google.com/macros/s/ and end in /exec.</span>'; return; }
+  if (!navigator.onLine) { res.innerHTML = '<span class="bad">📵 No Wi-Fi right now — connect to the internet to finish setup.</span>'; return; }
+  res.textContent = '⏳ Talking to your doc…';
+  const old = cloudCfg.url;
+  cloudCfg.url = url;
+  try {
+    const j = await cloudFetch({}, '?action=ping', 20000);
+    cloudCfg.docName = j.doc || ''; cloudCfg.dismissed = true; saveCloudCfg();
+    renderCloudRow();
+    openCloud('🎉 Connected to <b>“' + esc(j.doc || 'your doc') + '”</b>! Press <b>☁️ Save</b> (or <kbd>K</kbd>) any time while exploring.' + (j.savedAt ? ' This doc already has a save from ' + new Date(j.savedAt).toLocaleString() + ' — use <b>Load save from Doc</b> to play it.' : ''));
+    flushPending();
+  } catch (e) {
+    cloudCfg.url = old; saveCloudCfg();
+    res.innerHTML = '<span class="bad">❌ Couldn\'t connect (' + esc(e.message || e) + '). Check that you ran <b>setup</b>, deployed as a <b>Web app</b> with access <b>Anyone</b>, and copied the URL ending in /exec.</span>';
+  }
+}
+async function loadFromDoc() {
+  if (!cloudReady()) return openCloud();
+  if (!navigator.onLine) { toast('📵 No Wi-Fi — can\'t load from the doc right now.'); return; }
+  toast('⬇ Loading your save from the doc…');
+  try {
+    const j = await cloudFetch({}, '?action=load', 30000);
+    if (!j.code) { toast('Your doc has no save yet. Press ☁️ Save in the game first!'); return; }
+    await applyLoadedSave(await readSaveCode(j.code), j.savedAt);
+  } catch (e) { toast('❌ Couldn\'t load: ' + (e.message || e)); }
+}
+async function applyLoadedSave(s, savedAt) {
+  const have = loadGame();
+  if (have && !confirm('Load the save' + (savedAt ? ' from ' + new Date(savedAt).toLocaleString() : '') + '?\n\n' + 'It has ' + countKeys(s.caught) + ' species caught and ' + fmt(s.coins) + ' coins.\nThe game on this computer will be replaced.')) return;
+  if (battle) return toast('Finish your battle first!');
+  $('cloudWrap').classList.add('hidden');
+  $('panelWrap').classList.add('hidden');
+  $('starter').classList.add('hidden');
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(s)); } catch (e) { }
+  startFromSave(loadGame() || s);
+  toast('✅ Save loaded! ' + countKeys(S.caught) + ' species caught.');
+}
+function startFromSave(s) {
+  S = s;
+  delete S.migrated;
+  setupWorld();
+  P.x = S.px; P.y = S.py; P.moving = false;
+  $('title').classList.add('hidden');
+  $('btnContinue').classList.remove('hidden');
+  beginWorld();
+}
+(async () => { cloudPending = await IDBQ.get(); renderCloudRow(); if (S) updateHUD(); flushPending(); })();
+
+$('totalSpecies').textContent = fmt(TOTAL_SPECIES);
+if (!cloudReady() && !cloudCfg.dismissed) setTimeout(() => { if (mode === 'title') openCloud(); }, 600);
+if (!loadGame()) $('btnContinue').classList.add('hidden');
+WSEED = (rnd() * 4294967296) >>> 0;
+paradeTick();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
